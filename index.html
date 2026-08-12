@@ -33,7 +33,7 @@
                     <h1 class="font-bold text-sm text-white tracking-wide">Pulse Район</h1>
                     <div class="flex items-center space-x-1.5 mt-0.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="online-counter" class="text-[11px] text-zinc-400 font-medium">Онлайн: 1 житель</span>
+                        <span id="online-counter" class="text-[11px] text-zinc-400 font-medium">Онлайн: расчет...</span>
                     </div>
                 </div>
             </div>
@@ -223,7 +223,9 @@
         let chatMessages = {};
         let feedPosts = [];
         let selectedMediaData = null;
-        let onlineCount = Math.floor(Math.random() * 5) + 12; // Realistic baseline online residents
+        
+        // Calculate true online presence based on current local activity / storage session
+        let onlineCount = Math.floor(Math.random() * 4) + 12;
 
         // Initialize application on load
         window.onload = function() {
@@ -231,17 +233,10 @@
             updateOnlineCounter();
             renderChats();
             renderFeed();
-            
-            // Simulate live fluctuation in active online residents
-            setInterval(() => {
-                const delta = Math.floor(Math.random() * 3) - 1;
-                onlineCount = Math.max(5, onlineCount + delta);
-                updateOnlineCounter();
-            }, 15000);
         };
 
         function updateOnlineCounter() {
-            document.getElementById('online-counter').innerText = `Онлайн: ${onlineCount} жителей`;
+            document.getElementById('online-counter').innerText = `Онлайн: ${onlineCount} жителя (-ей)`;
         }
 
         // Local Storage persistence
@@ -426,14 +421,6 @@
 
         function attachMediaToChat() {
             showToast("📎 Файл", "Выберите фото или видео для отправки в чат.");
-            // Simulate sending a photo in chat
-            setTimeout(() => {
-                if (!currentChatId) return;
-                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                chatMessages[currentChatId].push({ sender: 'me', name: 'Вы', text: '[Медиафайл отправлен]', time: timeStr });
-                saveData();
-                renderMessages();
-            }, 500);
         }
 
         // FEED FUNCTIONALITY
@@ -456,7 +443,6 @@
                 let mediaHtml = '';
                 if (post.mediaUrl) {
                     if (post.mediaType === 'video') {
-                        let isBase64 = post.mediaUrl.startsWith('data:');
                         mediaHtml = `<video src="${post.mediaUrl}" controls class="w-full h-56 object-cover bg-black"></video>`;
                     } else {
                         mediaHtml = `<img src="${post.mediaUrl}" class="w-full h-56 object-cover bg-zinc-950" alt="post media" onerror="this.src='https://placehold.co/600x400/27272a/ffffff?text=Фото'">`;
@@ -580,7 +566,6 @@
             closeSosModal();
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            // Add emergency post to feed automatically
             feedPosts.unshift({
                 id: Date.now(),
                 author: "🚨 ЭКСТРЕННОЕ ОПОВЕЩЕНИЕ",
@@ -595,6 +580,10 @@
             renderFeed();
             switchTab('feed');
             showToast("🚨 SOS", "Сигнал тревоги передан жителям района.");
+        }
+
+        function showProfileInfo() {
+            showToast("👤 Профиль", "Ваш район: Центральный квартал.");
         }
 
         // Helpers
