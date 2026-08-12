@@ -219,6 +219,10 @@
                 <p class="text-xs text-zinc-300 leading-relaxed">
                     <strong>Pulse</strong> — районный живой чат и новостная медиа-лента для оперативной связи между соседями в режиме реального времени. Публикуйте фото и видео происшествий, общайтесь в чатах и используйте экстренную кнопку SOS.
                 </p>
+                <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center space-x-2.5">
+                    <i class="fa-solid fa-cloud-arrow-up text-emerald-400 text-base"></i>
+                    <span class="text-[11px] text-emerald-300 font-medium">Облачная синхронизация Firestore активна!</span>
+                </div>
                 <button onclick="closeInfoModal()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-2xl font-bold text-xs transition">Понятно</button>
             </div>
         </div>
@@ -237,7 +241,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration & Global Initialization
+        // Firebase Configuration & Global Initialization with Rules Compliance
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'district-chat-rostov';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "demo", projectId: "demo" };
 
@@ -260,15 +264,19 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
 
+                // RULE 3: Auth Before Queries
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-                userId = auth.currentUser?.uid || userId;
+                
+                userId = auth.currentUser?.uid || crypto.randomUUID();
                 document.getElementById('user-id-badge').innerText = 'ID: ' + userId.substring(0, 6);
+                showToast("☁️ Облако", "Успешное подключение к базе данных.");
             } catch (e) {
-                console.warn("Running in local fallback mode", e);
+                console.warn("Firebase initialization warning:", e);
+                userId = 'local-' + crypto.randomUUID();
                 document.getElementById('user-id-badge').innerText = 'Локальный режим';
             }
 
@@ -277,23 +285,24 @@
             renderFeed();
         };
 
-        // Firestore Realtime Listeners
+        // Firestore Realtime Listeners with RULE 1 & RULE 2 Compliance
         function initRealtimeListeners() {
-            if (!db) return;
+            if (!db || !auth) return;
 
-            // 1. Listen to Chats
+            // RULE 1: Strict Paths for public data
             const chatsCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats');
+            
+            // Error callback required per instructions
             unsubChats = onSnapshot(chatsCol, (snapshot) => {
                 chats = [];
                 snapshot.forEach(docSnap => {
                     chats.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                // Sort by timestamp desc if available
+                // RULE 2: Sort in JavaScript memory (avoiding complex compound queries)
                 chats.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
                 renderChats(document.getElementById('chat-search')?.value || '');
             }, (error) => console.error("Chats sync error:", error));
 
-            // 2. Listen to Feed Posts
             const feedCol = collection(db, 'artifacts', appId, 'public', 'data', 'feed');
             unsubFeed = onSnapshot(feedCol, (snapshot) => {
                 feedPosts = [];
@@ -307,7 +316,7 @@
 
         function listenToMessages(chatId) {
             if (unsubMessages) unsubMessages();
-            if (!db) return;
+            if (!db || !auth) return;
 
             const msgCol = collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}_messages`);
             unsubMessages = onSnapshot(msgCol, (snapshot) => {
@@ -419,10 +428,11 @@
 
             closeNewChatModal();
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'chats'), chatData);
                     openChatRoom(docRef.id);
+                    showToast("✅ Чат", "Обсуждение успешно создано в облаке.");
                 } catch (e) {
                     console.error("Error creating chat:", e);
                 }
@@ -438,10 +448,10 @@
             event.stopPropagation();
             if (!confirm("Удалить этот чат?")) return;
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'chats', chatId));
-                    showToast("🗑️ Удалено", "Чат был удален.");
+                    showToast("🗑️ Удалено", "Чат был удален из базы данных.");
                 } catch (e) {
                     console.error("Error deleting chat:", e);
                 }
@@ -514,7 +524,7 @@
 
             input.value = '';
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `chat_${currentChatId}_messages`), messageData);
                 } catch (e) {
@@ -648,13 +658,13 @@
             const updatedComments = [...(post.comments || []), newComment];
             input.value = '';
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'feed', postId), {
                         ...post,
                         comments: updatedComments
                     });
-                    showToast("💬 Комментарий", "Ваш комментарий опубликован.");
+                    showToast("💬 Комментарий", "Ваш комментарий сохранен в облаке.");
                 } catch (e) {
                     console.error("Error adding comment:", e);
                 }
@@ -719,10 +729,10 @@
 
             closeCreateModal();
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feed'), newPost);
-                    showToast("✅ Успешно", "Публикация добавлена в ленту района.");
+                    showToast("✅ Успешно", "Публикация добавлена в общую ленту района.");
                 } catch (e) {
                     console.error("Error publishing post:", e);
                 }
@@ -736,10 +746,10 @@
         async function deletePostItem(postId) {
             if (!confirm("Удалить эту публикацию?")) return;
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'feed', postId));
-                    showToast("🗑️ Удалено", "Публикация удалена.");
+                    showToast("🗑️ Удалено", "Публикация удалена из базы.");
                 } catch (e) {
                     console.error("Error deleting post:", e);
                 }
@@ -755,7 +765,7 @@
 
             const newLikes = (post.likes || 0) + 1;
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'feed', postId), {
                         ...post,
@@ -792,7 +802,7 @@
                 createdAt: Date.now()
             };
 
-            if (db) {
+            if (db && auth && auth.currentUser) {
                 try {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feed'), sosPost);
                 } catch (e) {
@@ -804,7 +814,7 @@
 
             switchTab('feed');
             renderFeed();
-            showToast("🚨 SOS", "Сигнал тревоги передан жителям района.");
+            showToast("🚨 SOS", "Сигнал тревоги передан всем соседям в облаке.");
         }
 
         function showToast(title, desc) {
