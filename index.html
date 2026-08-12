@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Чат Района — Локальный TikTok</title>
+    <title>Чат Района — Ростов-на-Дону, ЖК Суворовский</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS for Map selection -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -18,15 +20,14 @@
             overflow: hidden;
             touch-action: pan-y;
         }
-        /* Custom scrollbars and scroll snap for TikTok feel */
         .snap-container {
             scroll-snap-type: y mandatory;
             overflow-y: scroll;
             height: 100vh;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
         }
         .snap-container::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
+            display: none;
         }
         .snap-item {
             scroll-snap-align: start;
@@ -54,8 +55,8 @@
             </div>
             <div class="flex items-center space-x-3">
                 <button onclick="openDistrictSelector()" class="bg-zinc-800/80 backdrop-blur text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1.5 border border-zinc-700/60 shadow">
-                    <i class="fa-solid fa-location-dot"></i>
-                    <span id="current-district-label">Центральный</span>
+                    <i class="fa-solid fa-location-dot text-emerald-400"></i>
+                    <span id="current-district-label">ЖК Суворовский</span>
                 </button>
                 <button id="open-upload-btn" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-lg hover:opacity-90 transition">
                     <i class="fa-solid fa-plus"></i>
@@ -71,6 +72,21 @@
                 <!-- Dynamic posts injected via JS -->
             </div>
 
+            <!-- Map View Section -->
+            <div id="map-view" class="absolute inset-0 w-full h-full bg-zinc-950 z-20 flex flex-col transform translate-x-full transition-transform duration-300">
+                <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/90 backdrop-blur sticky top-0 z-20 pt-12">
+                    <div class="flex items-center space-x-3">
+                        <button onclick="switchView('feed')" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+                        <div>
+                            <h2 class="font-bold text-base">Карта Ростова и ЖК</h2>
+                            <p class="text-[10px] text-emerald-400">Метки происшествий и соседей на карте</p>
+                        </div>
+                    </div>
+                    <button onclick="openDistrictSelector()" class="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/30 font-semibold"><i class="fa-solid fa-map-pin"></i> Выбрать точку</button>
+                </div>
+                <div id="leaflet-map" class="flex-1 w-full h-full z-10"></div>
+            </div>
+
             <!-- Chat Contacts List View -->
             <div id="chat-view" class="absolute inset-0 w-full h-full bg-zinc-950 z-20 flex flex-col transform translate-x-full transition-transform duration-300">
                 <!-- Chat Header -->
@@ -79,30 +95,30 @@
                         <button id="close-chat-btn" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-arrow-left text-lg"></i></button>
                         <div>
                             <h2 class="font-bold text-base">Соседи и чаты</h2>
-                            <p class="text-[10px] text-emerald-400">онлайн в районе: 142 соседа</p>
+                            <p class="text-[10px] text-emerald-400" id="online-neighbors-count">онлайн в Суворовском: 245 соседей</p>
                         </div>
                     </div>
-                    <button onclick="openNewGroupModal()" class="text-emerald-400 font-medium text-xs bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20"><i class="fa-solid fa-users"></i> Районный чат</button>
+                    <button onclick="openNewGroupModal()" class="text-emerald-400 font-medium text-xs bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20"><i class="fa-solid fa-users"></i> Чат дома</button>
                 </div>
 
                 <!-- Neighborhood Quick Groups / Channels -->
                 <div class="px-4 py-3 border-b border-zinc-800 bg-zinc-900/40">
-                    <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Общие каналы района</span>
+                    <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Каналы района</span>
                     <div class="flex space-x-2 mt-2 overflow-x-auto no-scrollbar pb-1">
                         <div onclick="openChatRoom(101)" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2.5 rounded-2xl cursor-pointer w-28 flex flex-col items-center text-center transition">
                             <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-1 text-sm"><i class="fa-solid fa-bullhorn"></i></div>
-                            <span class="font-bold text-xs truncate w-full">Новости</span>
-                            <span class="text-[9px] text-zinc-500">1.4к участников</span>
+                            <span class="font-bold text-xs truncate w-full">Новости ЖК</span>
+                            <span class="text-[9px] text-zinc-500">3.8к участников</span>
                         </div>
                         <div onclick="openChatRoom(102)" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2.5 rounded-2xl cursor-pointer w-28 flex flex-col items-center text-center transition">
                             <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mb-1 text-sm"><i class="fa-solid fa-shield-dog"></i></div>
                             <span class="font-bold text-xs truncate w-full">Потеряшки</span>
-                            <span class="text-[9px] text-zinc-500">890 участников</span>
+                            <span class="text-[9px] text-zinc-500">1.2к участников</span>
                         </div>
                         <div onclick="openChatRoom(103)" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2.5 rounded-2xl cursor-pointer w-28 flex flex-col items-center text-center transition">
                             <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mb-1 text-sm"><i class="fa-solid fa-car"></i></div>
-                            <span class="font-bold text-xs truncate w-full">Парковка</span>
-                            <span class="text-[9px] text-zinc-500">540 участников</span>
+                            <span class="font-bold text-xs truncate w-full">Парковка / Выезд</span>
+                            <span class="text-[9px] text-zinc-500">2.4к участников</span>
                         </div>
                     </div>
                 </div>
@@ -121,7 +137,7 @@
                         <img id="room-avatar" src="" class="w-9 h-9 rounded-full object-cover border border-zinc-700" alt="Avatar">
                         <div>
                             <h3 id="room-name" class="font-bold text-sm">Сосед</h3>
-                            <span id="room-status" class="text-xs text-emerald-400">в сети · 200 м от вас</span>
+                            <span id="room-status" class="text-xs text-emerald-400">в сети · ЖК Суворовский</span>
                         </div>
                     </div>
                     <button class="text-zinc-400 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button>
@@ -178,8 +194,8 @@
                             <input id="file-input" type="file" accept="image/*,video/*" class="w-full text-xs text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-white hover:file:bg-emerald-600 cursor-pointer">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-zinc-400 mb-1">Описание для соседей</label>
-                            <textarea id="upload-caption" placeholder="Что происходит? Укажите дом или улицу..." rows="3" class="w-full bg-zinc-800 text-white p-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">Описание и адрес</label>
+                            <textarea id="upload-caption" placeholder="Что происходит? Укажите ул. Беляева, Еременко, б-р Комарова..." rows="3" class="w-full bg-zinc-800 text-white p-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
                         </div>
                         <div id="preview-container" class="w-full h-32 bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center border border-dashed border-zinc-700 relative">
                             <span class="text-xs text-zinc-500">Предпросмотр фото/видео</span>
@@ -189,25 +205,45 @@
                 </div>
             </div>
 
-            <!-- District Selection Modal -->
-            <div id="district-modal" class="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-                <div class="bg-zinc-900 border border-zinc-800 w-full max-w-xs rounded-2xl p-5 flex flex-col space-y-3 shadow-2xl">
-                    <h3 class="font-bold text-base text-white text-center mb-1">Выберите ваш район</h3>
-                    <div class="space-y-2">
-                        <button onclick="selectDistrict('Центральный')" class="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-sm font-medium transition flex items-center justify-between">
-                            <span>🏙️ Центральный район</span>
-                            <span class="text-xs text-emerald-400">1.2 км</span>
+            <!-- District / Location Selector Modal with Map & Presets -->
+            <div id="district-modal" class="absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+                <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl p-5 flex flex-col space-y-4 shadow-2xl">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-base text-white">Выбор вашего района и ЖК</h3>
+                        <button onclick="closeDistrictSelector()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    </div>
+                    <p class="text-xs text-zinc-400">Выберите готовый популярный микрорайон Ростова-на-Дону или укажите точную точку на интерактивной карте:</p>
+                    
+                    <div class="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-1">
+                        <button onclick="selectDistrictPreset('ЖК Суворовский', 47.302, 39.635)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
+                            <span>🏘️ ЖК «Суворовский» (Октябрьский р-н)</span>
+                            <span class="text-[10px] text-emerald-400 font-bold">Вы здесь</span>
                         </button>
-                        <button onclick="selectDistrict('Заречный')" class="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-sm font-medium transition flex items-center justify-between">
-                            <span>🌳 Заречный микрорайон</span>
-                            <span class="text-xs text-emerald-400">3.4 км</span>
+                        <button onclick="selectDistrictPreset('Севен-Скайз', 47.310, 39.620)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
+                            <span>🏢 ЖК «Севен Скайз»</span>
+                            <span class="text-[10px] text-zinc-400">Суворовский</span>
                         </button>
-                        <button onclick="selectDistrict('Парковый')" class="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-sm font-medium transition flex items-center justify-between">
-                            <span>🏡 Парковый квартал</span>
-                            <span class="text-xs text-emerald-400">5.1 км</span>
+                        <button onclick="selectDistrictPreset('Центр (Буденновский)', 47.222, 39.718)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
+                            <span>🏙️ Центр (Буденновский / Большая Садовая)</span>
+                            <span class="text-[10px] text-zinc-400">Ростов</span>
+                        </button>
+                        <button onclick="selectDistrictPreset('Северный (СЖМ)', 47.290, 39.715)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
+                            <span>🌳 Северный микрорайон (СЖМ)</span>
+                            <span class="text-[10px] text-zinc-400">Пр. Космонавтов</span>
+                        </button>
+                        <button onclick="selectDistrictPreset('Западный (ЗЖМ)', 47.228, 39.630)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
+                            <span>🏡 Западный (ЗЖМ)</span>
+                            <span class="text-[10px] text-zinc-400">Пр. Стачки / Зорге</span>
                         </button>
                     </div>
-                    <button onclick="closeDistrictSelector()" class="mt-2 w-full bg-zinc-800 text-zinc-300 py-2 rounded-xl text-xs font-semibold hover:bg-zinc-700">Закрыть</button>
+
+                    <div class="pt-2 border-t border-zinc-800 flex flex-col space-y-2">
+                        <button onclick="useGpsLocation()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-emerald-400 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition border border-zinc-700">
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                            <span>Определить по GPS / Геолокации</span>
+                        </button>
+                        <button onclick="closeDistrictSelector()" class="w-full bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-600 transition">Готово</button>
+                    </div>
                 </div>
             </div>
 
@@ -219,7 +255,7 @@
                 <i class="fa-solid fa-house-chimney text-base"></i>
                 <span class="text-[10px] mt-0.5">Лента</span>
             </button>
-            <button id="nav-map" onclick="alert('Карта района в разработке: скоро здесь появятся гео-метки происшествий!')" class="flex flex-col items-center hover:text-white transition">
+            <button id="nav-map-btn" onclick="openMapTab()" class="flex flex-col items-center hover:text-white transition">
                 <i class="fa-solid fa-map-location-dot text-base"></i>
                 <span class="text-[10px] mt-0.5">Карта</span>
             </button>
@@ -239,63 +275,71 @@
 
     </div>
 
+    <!-- Leaflet JS for Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
-        // Neighborhood Database / State
-        let currentDistrict = "Центральный";
+        // Neighborhood Database / State anchored in Rostov-on-Don (Suvorovskiy default)
+        let currentDistrict = "ЖК Суворовский";
+        let currentCoords = [47.302, 39.635];
+        let leafletMap = null;
+        let mapInitialized = false;
         
         let posts = [
             {
                 id: 1,
                 author: "Алексей С.",
-                address: "ул. Ленина, 14",
+                address: "ул. Беляева, 8",
                 avatar: "https://placehold.co/100x100/10b981/ffffff?text=АС",
                 category: "🚨 Срочно / ЧП",
-                caption: "Кто потерял собаку? Бегает у второго подъезда, на вид испуганная, в ошейнике. #потеряшки #собака",
+                caption: "Кто потерял собаку в Суворовском? Бегает у второго подъезда, на вид испуганная, в ошейнике. #потеряшки #суворовский",
                 type: "image",
                 url: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&auto=format&fit=crop&q=80",
                 likes: 42,
                 isLiked: false,
+                coords: [47.303, 39.632],
                 comments: [
-                    { author: "Марина", text: "Ой, это кажется пес из 5-го дома! Сейчас напишу хозяйке.", time: "10 мин назад" },
-                    { author: "Игорь", text: "Уже забрали домой, спасибо неравнодушным!", time: "2 мин назад" }
+                    { author: "Марина", text: "Ой, это пес из соседнего двора на Еременко! Сейчас напишу хозяевам.", time: "10 мин назад" },
+                    { author: "Игорь", text: "Уже забрали домой, спасибо неравнодушным соседям!", time: "2 мин назад" }
                 ]
             },
             {
                 id: 2,
                 author: "Елена К.",
-                address: "пр. Мира, 32",
+                address: "ул. академика П.А. Левицкого, 4",
                 avatar: "https://placehold.co/100x100/3b82f6/ffffff?text=ЕК",
                 category: "🚗 Парковка / Дорога",
-                caption: "Ребята, кто припарковался на месте для инвалидов у супермаркета? Эвакуатор уже едет! ⚠️ #парковка",
+                caption: "Ребята, кто перекрыл выезд из Суворовского на Ученическую? Пробка жуткая с самого утра! ⚠️ #пробки #дорога",
                 type: "image",
                 url: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=600&auto=format&fit=crop&q=80",
                 likes: 18,
                 isLiked: true,
+                coords: [47.298, 39.640],
                 comments: [
-                    { author: "Сергей", text: "Спасибо за предупреждение, бегу переставить!", time: "15 мин назад" }
+                    { author: "Сергей", text: "Там автобус сломался на полосе, объезжайте через дворы!", time: "15 мин назад" }
                 ]
             },
             {
                 id: 3,
                 author: "Дмитрий В.",
-                address: "ул. Советская, 8",
+                address: "б-р Имени Устинова",
                 avatar: "https://placehold.co/100x100/f59e0b/ffffff?text=ДВ",
                 category: "🎉 Мероприятия и жизнь",
-                caption: "Закат сегодня над нашим двором просто невероятный! Кто тоже любуется? 🌅✨ #красота #нашрайон",
+                caption: "Закат сегодня над нашими высотками в Суворовском просто невероятный! Кто тоже любуется с балкона? 🌅✨ #ростов #суворовский",
                 type: "video",
                 url: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1186-large.mp4",
                 likes: 135,
                 isLiked: false,
+                coords: [47.305, 39.638],
                 comments: [
-                    { author: "Ольга", text: "Шикарный вид!", time: "час назад" }
+                    { author: "Ольга", text: "Шикарный вид из 7 литеры!", time: "час назад" }
                 ]
             }
         ];
 
         let chats = [
-            { id: 1, name: "Сосед с 3-го этажа", address: "кв. 45", avatar: "https://placehold.co/100x100/3b82f6/ffffff?text=С3", lastMessage: "Привет! Перфоратор выключил, извините за шум)", time: "14:15", unread: 1 },
-            { id: 2, name: "Мария (родительский чат)", address: "Детская площадка", avatar: "https://placehold.co/100x100/ec4899/ffffff?text=МД", lastMessage: "Кто сегодня вечером ведет детей на каток?", time: "Вчера", unread: 1 },
-            { id: 3, name: "Иван Автолюбитель", address: "Паркинг блок Б", avatar: "https://placehold.co/100x100/10b981/ffffff?text=ИА", lastMessage: "Фары забыли выключить на синем Hyundai", time: "Пн", unread: 0 }
+            { id: 1, name: "Сосед из 3-го подъезда", address: "ЖК Суворовский, кв. 45", avatar: "https://placehold.co/100x100/3b82f6/ffffff?text=С3", lastMessage: "Привет! Перфоратор выключил, извините за шум в обед)", time: "14:15", unread: 1 },
+            { id: 2, name: "Мария (Мамы Суворовского)", address: "Детская площадка", avatar: "https://placehold.co/100x100/ec4899/ffffff?text=МД", lastMessage: "Кто сегодня вечером ведет детей на каток у аллеи?", time: "Вчера", unread: 1 },
+            { id: 3, name: "Иван Автолюбитель", address: "Паркинг Суворовский", avatar: "https://placehold.co/100x100/10b981/ffffff?text=ИА", lastMessage: "Фары забыли выключить на белом Kia", time: "Пн", unread: 0 }
         ];
 
         let activeChatMessages = {
@@ -305,19 +349,19 @@
                 { sender: 'them', text: "Привет! Перфоратор выключил, извините за шум)", time: "14:15" }
             ],
             2: [
-                { sender: 'them', text: "Кто сегодня вечером ведет детей на каток?", time: "Вчера" }
+                { sender: 'them', text: "Кто сегодня вечером ведет детей на аллею?", time: "Вчера" }
             ],
             3: [
-                { sender: 'them', text: "Фары забыли выключить на синем Hyundai", time: "Пн" }
+                { sender: 'them', text: "Фары забыли выключить на белом автомобиле", time: "Пн" }
             ],
             101: [
-                { sender: 'them', text: "📢 Официальные новости ЖК и района. Вода будет отключена в четверг с 10:00 до 14:00.", time: "10:00" }
+                { sender: 'them', text: "📢 Официальные новости ЖК Суворовский. Плановое отключение воды в четверг с 10:00 до 14:00.", time: "10:00" }
             ],
             102: [
-                { sender: 'them', text: "🐕 Нашли кота у 4 подъезда, рыжий пушистый. Чей?", time: "12:00" }
+                { sender: 'them', text: "🐕 Нашли кота у 14 дома, пушистый серый. Чей беглец?", time: "12:00" }
             ],
             103: [
-                { sender: 'them', text: "Кто закроет проезд у шлагбаума? Скорая не может проехать.", time: "13:30" }
+                { sender: 'them', text: "Кто закроет проезд у шлагбаума? Скорая не может проехать к парадной.", time: "13:30" }
             ]
         };
 
@@ -329,6 +373,7 @@
         // DOM elements
         const feedContainer = document.getElementById('feed-view');
         const chatView = document.getElementById('chat-view');
+        const mapView = document.getElementById('map-view');
         const chatRoomView = document.getElementById('chat-room-view');
         const chatListContainer = document.getElementById('chat-list');
         const roomMessagesContainer = document.getElementById('room-messages');
@@ -396,7 +441,7 @@
                         <p class="text-sm text-zinc-200 mt-1.5 drop-shadow line-clamp-3 leading-snug">${post.caption}</p>
                         <div class="flex items-center space-x-2 mt-2 text-xs text-emerald-400">
                             <i class="fa-solid fa-location-dot"></i>
-                            <span>Район ${currentDistrict}</span>
+                            <span>${currentDistrict}, Ростов-на-Дону</span>
                         </div>
                     </div>
                 `;
@@ -406,7 +451,6 @@
             setupVideoObserver();
         }
 
-        // Intersection Observer for autoplaying video posts
         function setupVideoObserver() {
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -424,7 +468,6 @@
             document.querySelectorAll('.snap-item').forEach(item => observer.observe(item));
         }
 
-        // Toggle Like
         window.toggleLike = function(postId) {
             const post = posts.find(p => p.id === postId);
             if (post) {
@@ -435,7 +478,7 @@
         };
 
         window.sharePost = function() {
-            alert("Ссылка на районную новость скопирована! Отправьте её соседям в чат.");
+            alert("Ссылка на новость Суворовского скопирована в буфер обмена!");
         };
 
         // Render Chat Contacts List
@@ -473,12 +516,12 @@
             currentActiveChatId = chatId;
             let chatName = "Сосед";
             let chatAvatar = "https://placehold.co/100x100/10b981/ffffff?text=Н";
-            let chatStatus = "в сети · рядом с вами";
+            let chatStatus = `в сети · ${currentDistrict}`;
 
             if (chatId > 100) {
-                if (chatId === 101) { chatName = "📢 Новости и ЧП Района"; chatAvatar = "https://placehold.co/100x100/10b981/ffffff?text=НВ"; chatStatus = "официальный канал · 1.4к участников"; }
-                if (chatId === 102) { chatName = "🐕 Потеряшки и Находки"; chatAvatar = "https://placehold.co/100x100/f59e0b/ffffff?text=ПЗ"; chatStatus = "помощь животным · 890 участников"; }
-                if (chatId === 103) { chatName = "🚗 Парковка и Дороги"; chatAvatar = "https://placehold.co/100x100/3b82f6/ffffff?text=ПР"; chatStatus = "авточат · 540 участников"; }
+                if (chatId === 101) { chatName = "📢 Официальные новости ЖК"; chatAvatar = "https://placehold.co/100x100/10b981/ffffff?text=НВ"; chatStatus = "канал микрорайона · 3.8к соседей"; }
+                if (chatId === 102) { chatName = "🐕 Потеряшки и Находки"; chatAvatar = "https://placehold.co/100x100/f59e0b/ffffff?text=ПЗ"; chatStatus = "помощь животным · 1.2к участников"; }
+                if (chatId === 103) { chatName = "🚗 Авточат и Выезд"; chatAvatar = "https://placehold.co/100x100/3b82f6/ffffff?text=ПР"; chatStatus = "дорожная обстановка · 2.4к участников"; }
             } else {
                 const chat = chats.find(c => c.id === chatId);
                 if (chat) {
@@ -498,7 +541,6 @@
             chatRoomView.classList.remove('translate-x-full');
         };
 
-        // Render Messages in Room
         function renderMessages() {
             roomMessagesContainer.innerHTML = '';
             const messages = activeChatMessages[currentActiveChatId] || [];
@@ -515,7 +557,6 @@
             roomMessagesContainer.scrollTop = roomMessagesContainer.scrollHeight;
         }
 
-        // Send Message
         document.getElementById('send-msg-btn').onclick = sendMessage;
         document.getElementById('message-input').onkeypress = (e) => {
             if (e.key === 'Enter') sendMessage();
@@ -545,12 +586,11 @@
             input.value = '';
             renderMessages();
 
-            // Simulate neighbor reply
             if (currentActiveChatId < 100) {
                 setTimeout(() => {
-                    activeChatMessages[currentActiveChatId].push({ sender: 'them', text: "Понял вас, спасибо за информацию! 👍", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+                    activeChatMessages[currentActiveChatId].push({ sender: 'them', text: "Понял вас, спасибо соседу! 👍", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
                     const chat = chats.find(c => c.id === currentActiveChatId);
-                    if (chat) chat.lastMessage = "Понял вас, спасибо за информацию! 👍";
+                    if (chat) chat.lastMessage = "Понял вас, спасибо соседу! 👍";
                     renderMessages();
                     renderChats();
                 }, 2000);
@@ -637,7 +677,7 @@
             const newPost = {
                 id: Date.now(),
                 author: "Вы (Сосед)",
-                address: "ул. Новая, 12",
+                address: `${currentDistrict}, ул. Еременко`,
                 avatar: "https://placehold.co/100x100/10b981/ffffff?text=В",
                 category: category,
                 caption: caption,
@@ -645,6 +685,7 @@
                 url: selectedFileUrl || (selectedFileType === 'video' ? 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1186-large.mp4' : 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80'),
                 likes: 1,
                 isLiked: true,
+                coords: currentCoords,
                 comments: []
             };
 
@@ -659,7 +700,7 @@
             switchView('feed');
         };
 
-        // District Selector Modal
+        // District & Map Modal Selection
         window.openDistrictSelector = function() {
             districtModal.classList.remove('hidden');
         };
@@ -668,15 +709,78 @@
             districtModal.classList.add('hidden');
         };
 
-        window.selectDistrict = function(name) {
+        window.selectDistrictPreset = function(name, lat, lon) {
             currentDistrict = name;
+            currentCoords = [lat, lon];
             document.getElementById('current-district-label').innerText = name;
+            document.getElementById('online-neighbors-count').innerText = `онлайн в ${name}: 245 соседей`;
             closeDistrictSelector();
             renderFeed();
+            if (leafletMap) {
+                leafletMap.setView([lat, lon], 14);
+            }
         };
 
-        window.openNewGroupModal = function() {
-            alert("Создание нового районного чата доступно старостам домов и активистам района!");
+        window.useGpsLocation = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    currentCoords = [position.coords.latitude, position.coords.longitude];
+                    currentDistrict = "Ваша геопозиция (Ростов)";
+                    document.getElementById('current-district-label').innerText = currentDistrict;
+                    closeDistrictSelector();
+                    renderFeed();
+                    if (leafletMap) {
+                        leafletMap.setView(currentCoords, 15);
+                    }
+                }, () => {
+                    alert("Не удалось получить геопозицию. Выбран ЖК Суворовский по умолчанию.");
+                });
+            } else {
+                alert("Геолокация не поддерживается вашим браузером.");
+            }
+        };
+
+        // Leaflet Map Integration
+        window.openMapTab = function() {
+            mapView.classList.remove('translate-x-full');
+            chatView.classList.add('translate-x-full');
+            chatRoomView.classList.add('translate-x-full');
+
+            setTimeout(() => {
+                if (!mapInitialized) {
+                    leafletMap = L.map('leaflet-map').setView(currentCoords, 14);
+                    
+                    // Dark theme tile layer for map
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{z}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap contributors & CARTO'
+                    }).addTo(leafletMap);
+
+                    // Add markers for current posts
+                    posts.forEach(p => {
+                        if (p.coords) {
+                            const marker = L.marker(p.coords).addTo(leafletMap);
+                            marker.bindPopup(`<b>${p.category}</b><br>${p.caption.substring(0, 50)}...<br><span style="color: #10b981;">${p.address}</span>`);
+                        }
+                    });
+
+                    // Allow user to click map to set location
+                    leafletMap.on('click', function(e) {
+                        currentCoords = [e.latlng.lat, e.latlng.lng];
+                        currentDistrict = `Точка (${e.latlng.lat.toFixed(2)}, ${e.latlng.lng.toFixed(2)})`;
+                        document.getElementById('current-district-label').innerText = currentDistrict;
+                        L.popup()
+                            .setLatLng(e.latlng)
+                            .setContent("📍 Ваша новая позиция в Ростове установлена!")
+                            .openOn(leafletMap);
+                    });
+
+                    mapInitialized = true;
+                } else {
+                    leafletMap.invalidateSize();
+                    leafletMap.setView(currentCoords, 14);
+                }
+            }, 300);
         };
 
         // Navigation Switching
@@ -687,12 +791,14 @@
         function switchView(view) {
             if (view === 'feed') {
                 chatView.classList.add('translate-x-full');
+                mapView.classList.add('translate-x-full');
                 chatRoomView.classList.add('translate-x-full');
                 navHome.classList.add('text-white');
                 navChat.classList.remove('text-white');
             } else if (view === 'chat') {
                 renderChats();
                 chatView.classList.remove('translate-x-full');
+                mapView.classList.add('translate-x-full');
                 navChat.classList.add('text-white');
                 navHome.classList.remove('text-white');
             }
@@ -700,7 +806,7 @@
 
         navHome.onclick = () => switchView('feed');
         navChat.onclick = () => switchView('chat');
-        navProfile.onclick = () => alert("Ваш профиль соседа: верифицирован по адресу ул. Новая, 12.");
+        navProfile.onclick = () => alert("Ваш профиль соседа: верифицирован в ЖК Суворовский, ул. академика П.А. Левицкого.");
 
         document.getElementById('close-chat-btn').onclick = () => {
             chatView.classList.add('translate-x-full');
@@ -716,7 +822,7 @@
             if (tab === 'following') {
                 document.getElementById('tab-following').className = 'text-white border-b-2 border-emerald-500 pb-0.5 font-bold';
                 document.getElementById('tab-feed').className = 'hover:text-white transition font-normal';
-                alert("Показаны только избранные дома и подписки вашего квартала.");
+                alert("Показаны только избранные дома и соседи вашего квартала в Ростове.");
             } else {
                 document.getElementById('tab-feed').className = 'text-white border-b-2 border-emerald-500 pb-0.5 font-bold';
                 document.getElementById('tab-following').className = 'hover:text-white transition font-normal';
@@ -734,7 +840,6 @@
             }
         }
 
-        // Initial Initialization
         window.onload = function() {
             renderFeed();
             renderChats();
