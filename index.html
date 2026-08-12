@@ -33,7 +33,7 @@
                     <h1 class="font-bold text-sm text-white tracking-wide">Pulse Район</h1>
                     <div class="flex items-center space-x-1.5 mt-0.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="online-counter" class="text-[11px] text-zinc-400 font-medium">Онлайн: расчет...</span>
+                        <span id="online-counter" class="text-[11px] text-zinc-400 font-medium">Онлайн: 1 (Вы)</span>
                     </div>
                 </div>
             </div>
@@ -61,7 +61,7 @@
                     </div>
                 </div>
 
-                <!-- Chat List container (starts empty) -->
+                <!-- Chat List container -->
                 <div id="chats-list-container" class="flex-1 overflow-y-auto divide-y divide-zinc-900">
                     <!-- Dynamic chats injected here -->
                 </div>
@@ -174,7 +174,7 @@
             </div>
         </div>
 
-        <!-- 2. NEW CHAT MODAL (Replacing native prompt) -->
+        <!-- 2. NEW CHAT MODAL -->
         <div id="new-chat-modal" class="absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-3xl p-5 flex flex-col space-y-4 shadow-2xl">
                 <div class="flex justify-between items-center">
@@ -216,28 +216,21 @@
     </div>
 
     <script>
-        // State management (No template data, starts completely clean)
+        // State management with clean empty starting state (no fake data)
         let activeTab = 'chats';
         let currentChatId = null;
+        
         let chats = [];
         let chatMessages = {};
         let feedPosts = [];
         let selectedMediaData = null;
-        
-        // Calculate true online presence based on current local activity / storage session
-        let onlineCount = Math.floor(Math.random() * 4) + 12;
 
         // Initialize application on load
         window.onload = function() {
             loadData();
-            updateOnlineCounter();
             renderChats();
             renderFeed();
         };
-
-        function updateOnlineCounter() {
-            document.getElementById('online-counter').innerText = `Онлайн: ${onlineCount} жителя (-ей)`;
-        }
 
         // Local Storage persistence
         function saveData() {
@@ -350,9 +343,7 @@
                 avatar: "https://placehold.co/100x100/6366f1/ffffff?text=" + encodeURIComponent(name.charAt(0).toUpperCase()),
                 unread: 0
             });
-            chatMessages[newId] = [
-                { sender: 'other', name: 'Система', text: `Создано обсуждение: "${name}". Общайтесь вежливо и помогайте друг другу!`, time: 'Только что' }
-            ];
+            chatMessages[newId] = [];
             saveData();
             renderChats();
             closeNewChatModal();
@@ -381,6 +372,11 @@
             container.innerHTML = '';
             const msgs = chatMessages[currentChatId] || [];
 
+            if (msgs.length === 0) {
+                container.innerHTML = `<div class="flex-1 flex items-center justify-center h-full text-center text-zinc-500 text-xs py-10">В этом чате пока нет сообщений.<br>Напишите первое сообщение ниже!</div>`;
+                return;
+            }
+
             msgs.forEach(m => {
                 const isMe = m.sender === 'me';
                 const div = document.createElement('div');
@@ -407,7 +403,6 @@
 
             chatMessages[currentChatId].push({ sender: 'me', name: 'Вы', text: text, time: timeStr });
             
-            // Update chat last message
             const chat = chats.find(c => c.id === currentChatId);
             if (chat) {
                 chat.lastMessage = text;
@@ -522,7 +517,7 @@
 
             const newPost = {
                 id: Date.now(),
-                author: "Житель района",
+                author: "Вы (Житель)",
                 time: "Только что",
                 caption: caption || "Без описания",
                 mediaUrl: selectedMediaData ? selectedMediaData.url : null,
@@ -568,7 +563,7 @@
             
             feedPosts.unshift({
                 id: Date.now(),
-                author: "🚨 ЭКСТРЕННОЕ ОПОВЕЩЕНИЕ",
+                author: "🚨 ЭКСТРЕННОЕ ОПОВЕЩЕНИЕ (Вы)",
                 time: timeStr,
                 caption: text,
                 mediaUrl: null,
@@ -583,7 +578,7 @@
         }
 
         function showProfileInfo() {
-            showToast("👤 Профиль", "Ваш район: Центральный квартал.");
+            showToast("👤 Профиль", "Вы подключены к приложению района.");
         }
 
         // Helpers
@@ -592,7 +587,7 @@
             document.getElementById('toast-text').innerText = `${title}: ${desc}`;
             toast.classList.remove('opacity-0', 'pointer-events-none');
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'pointer-events-none');
+                toast.classList.0 = toast.classList.add('opacity-0', 'pointer-events-none');
             }, 3000);
         }
 
