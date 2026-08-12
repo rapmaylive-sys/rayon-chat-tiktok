@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Чат Района — Локальный TikTok</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b;
+            color: #f4f4f5;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
+        /* Custom scrollbars and scroll snap for TikTok feel */
+        .snap-container {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 100vh;
+            scrollbar-width: none; /* Firefox */
+        }
+        .snap-container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+        .snap-item {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            height: 100vh;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col justify-between select-none">
+
+    <div id="app" class="relative w-full h-full max-w-md mx-auto bg-zinc-950 flex flex-col shadow-2xl overflow-hidden border-x border-zinc-900">
+        
+        <!-- Top Navigation Bar -->
+        <header class="absolute top-0 left-0 right-0 z-30 flex justify-between items-center px-4 py-3 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-auto">
+            <div class="flex items-center space-x-4 text-zinc-400 font-semibold text-sm">
+                <button id="tab-following" onclick="switchDistrictTab('following')" class="hover:text-white transition">Подписки</button>
+                <button id="tab-feed" onclick="switchDistrictTab('feed')" class="text-white border-b-2 border-emerald-500 pb-0.5 font-bold">🏠 Мой Район</button>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="openDistrictSelector()" class="bg-zinc-800/80 backdrop-blur text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1.5 border border-zinc-700/60 shadow">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span id="current-district-label">Центральный</span>
+                </button>
+                <button id="open-upload-btn" class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-lg hover:opacity-90 transition">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area (Views) -->
+        <main id="main-content" class="relative flex-1 w-full h-full overflow-hidden">
+            
+            <!-- District Feed View -->
+            <div id="feed-view" class="absolute inset-0 w-full h-full snap-container">
+                <!-- Dynamic posts injected via JS -->
+            </div>
+
+            <!-- Chat Contacts List View -->
+            <div id="chat-view" class="absolute inset-0 w-full h-full bg-zinc-950 z-20 flex flex-col transform translate-x-full transition-transform duration-300">
+                <!-- Chat Header -->
+                <div class="px-4 py-3 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900/90 backdrop-blur sticky top-0 z-10 pt-12">
+                    <div class="flex items-center space-x-3">
+                        <button id="close-chat-btn" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+                        <div>
+                            <h2 class="font-bold text-base">Соседи и чаты</h2>
+                            <p class="text-[10px] text-emerald-400">онлайн в районе: 142 соседа</p>
+                        </div>
+                    </div>
+                    <button onclick="openNewGroupModal()" class="text-emerald-400 font-medium text-xs bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20"><i class="fa-solid fa-users"></i> Районный чат</button>
+                </div>
+
+                <!-- Neighborhood Quick Groups / Channels -->
+                <div class="px-4 py-3 border-b border-zinc-800 bg-zinc-900/40">
+                    <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Общие каналы района</span>
+                    <div class="flex space-x-2 mt-2 overflow-x-auto no-scrollbar pb-1">
+                        <div onclick="openChatRoom(101)" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2.5 rounded-2xl cursor-pointer w-28 flex flex-col items-center text-center transition">
+                            <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-1 text-sm"><i class="fa-solid fa-bullhorn"></i></div>
+                            <span class="font-bold text-xs truncate w-full">Новости</span>
+                            <span class="text-[9px] text-zinc-500">1.4к участников</span>
+                        </div>
+                        <div onclick="openChatRoom(102)" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2.5 rounded-2xl cursor-pointer w-28 flex flex-col items-center text-center transition">
+                            <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mb-1 text-sm"><i class="fa-solid fa-shield-dog"></i></div>
+                            <span class="font-bold text-xs truncate w-full">Потеряшки</span>
+                            <span class="text-[9px] text-zinc-500">890 участников</span>
+                        </div>
+                        <div onclick="openChatRoom(103)" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2.5 rounded-2xl cursor-pointer w-28 flex flex-col items-center text-center transition">
+                            <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mb-1 text-sm"><i class="fa-solid fa-car"></i></div>
+                            <span class="font-bold text-xs truncate w-full">Парковка</span>
+                            <span class="text-[9px] text-zinc-500">540 участников</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Contacts / Message List -->
+                <div id="chat-list" class="flex-1 overflow-y-auto p-4 space-y-3">
+                    <!-- Contact items injected via JS -->
+                </div>
+            </div>
+
+            <!-- Chat Room Detail View -->
+            <div id="chat-room-view" class="absolute inset-0 w-full h-full bg-zinc-950 z-30 flex flex-col transform translate-x-full transition-transform duration-300">
+                <div class="px-4 py-3 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/90 backdrop-blur sticky top-0 z-10 pt-12">
+                    <div class="flex items-center space-x-3">
+                        <button id="close-room-btn" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-arrow-left text-lg"></i></button>
+                        <img id="room-avatar" src="" class="w-9 h-9 rounded-full object-cover border border-zinc-700" alt="Avatar">
+                        <div>
+                            <h3 id="room-name" class="font-bold text-sm">Сосед</h3>
+                            <span id="room-status" class="text-xs text-emerald-400">в сети · 200 м от вас</span>
+                        </div>
+                    </div>
+                    <button class="text-zinc-400 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                </div>
+                <!-- Messages Container -->
+                <div id="room-messages" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col">
+                    <!-- Messages injected via JS -->
+                </div>
+                <!-- Message Input -->
+                <div class="p-3 bg-zinc-900 border-t border-zinc-800 flex items-center space-x-2">
+                    <button class="text-zinc-400 hover:text-white p-2"><i class="fa-regular fa-image text-xl"></i></button>
+                    <input id="message-input" type="text" placeholder="Написать соседу..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <button id="send-msg-btn" class="bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-emerald-600 transition">
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Comments Modal Drawer -->
+            <div id="comments-modal" class="absolute inset-x-0 bottom-0 h-[70%] bg-zinc-900 rounded-t-2xl z-40 transform translate-y-full transition-transform duration-300 flex flex-col border-t border-zinc-800 shadow-2xl">
+                <div class="p-3 border-b border-zinc-800 flex items-center justify-between">
+                    <h3 id="comments-title" class="font-bold text-sm mx-auto">Обсуждение (0)</h3>
+                    <button id="close-comments-btn" class="text-zinc-400 hover:text-white px-2"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <div id="comments-list" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <!-- Comments injected here -->
+                </div>
+                <div class="p-3 bg-zinc-950 border-t border-zinc-800 flex items-center space-x-2">
+                    <input id="comment-input" type="text" placeholder="Написать комментарий соседям..." class="flex-1 bg-zinc-800 text-white px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <button id="send-comment-btn" class="bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-emerald-600 transition">Отправить</button>
+                </div>
+            </div>
+
+            <!-- Upload Post Modal -->
+            <div id="upload-modal" class="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+                <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl p-5 flex flex-col space-y-4 shadow-2xl animate-fade-in">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-lg text-white">Новость района</h3>
+                        <button id="close-upload-btn" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">Категория события</label>
+                            <select id="post-category" class="w-full bg-zinc-800 text-white p-2.5 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <option value="🚨 Срочно / ЧП">🚨 Срочно / ЧП в районе</option>
+                                <option value="🐕 Потеряшки / Находки">🐕 Потеряшки / Находки</option>
+                                <option value="🚗 Парковка / Дорога">🚗 Парковка / Дорога</option>
+                                <option value="🌿 Благоустройство">🌿 Благоустройство и жалобы</option>
+                                <option value="🎉 Мероприятия и жизнь">🎉 Мероприятия и жизнь</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">Фото или видео с места</label>
+                            <input id="file-input" type="file" accept="image/*,video/*" class="w-full text-xs text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-white hover:file:bg-emerald-600 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">Описание для соседей</label>
+                            <textarea id="upload-caption" placeholder="Что происходит? Укажите дом или улицу..." rows="3" class="w-full bg-zinc-800 text-white p-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
+                        </div>
+                        <div id="preview-container" class="w-full h-32 bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center border border-dashed border-zinc-700 relative">
+                            <span class="text-xs text-zinc-500">Предпросмотр фото/видео</span>
+                        </div>
+                    </div>
+                    <button id="submit-upload-btn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2.5 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 transition">Опубликовать в районе</button>
+                </div>
+            </div>
+
+            <!-- District Selection Modal -->
+            <div id="district-modal" class="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+                <div class="bg-zinc-900 border border-zinc-800 w-full max-w-xs rounded-2xl p-5 flex flex-col space-y-3 shadow-2xl">
+                    <h3 class="font-bold text-base text-white text-center mb-1">Выберите ваш район</h3>
+                    <div class="space-y-2">
+                        <button onclick="selectDistrict('Центральный')" class="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-sm font-medium transition flex items-center justify-between">
+                            <span>🏙️ Центральный район</span>
+                            <span class="text-xs text-emerald-400">1.2 км</span>
+                        </button>
+                        <button onclick="selectDistrict('Заречный')" class="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-sm font-medium transition flex items-center justify-between">
+                            <span>🌳 Заречный микрорайон</span>
+                            <span class="text-xs text-emerald-400">3.4 км</span>
+                        </button>
+                        <button onclick="selectDistrict('Парковый')" class="w-full text-left px-4 py-3 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-sm font-medium transition flex items-center justify-between">
+                            <span>🏡 Парковый квартал</span>
+                            <span class="text-xs text-emerald-400">5.1 км</span>
+                        </button>
+                    </div>
+                    <button onclick="closeDistrictSelector()" class="mt-2 w-full bg-zinc-800 text-zinc-300 py-2 rounded-xl text-xs font-semibold hover:bg-zinc-700">Закрыть</button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav class="absolute bottom-0 left-0 right-0 z-30 h-14 bg-black/95 backdrop-blur border-t border-zinc-900 flex justify-around items-center px-2 text-zinc-400">
+            <button id="nav-home" class="flex flex-col items-center text-white transition">
+                <i class="fa-solid fa-house-chimney text-base"></i>
+                <span class="text-[10px] mt-0.5">Лента</span>
+            </button>
+            <button id="nav-map" onclick="alert('Карта района в разработке: скоро здесь появятся гео-метки происшествий!')" class="flex flex-col items-center hover:text-white transition">
+                <i class="fa-solid fa-map-location-dot text-base"></i>
+                <span class="text-[10px] mt-0.5">Карта</span>
+            </button>
+            <button id="nav-create-quick" class="flex items-center justify-center w-10 h-7 bg-emerald-500 text-white rounded-lg font-bold text-lg shadow-md hover:bg-emerald-600 transition">
+                <i class="fa-solid fa-plus text-sm"></i>
+            </button>
+            <button id="nav-chat" class="flex flex-col items-center hover:text-white transition relative">
+                <i class="fa-solid fa-comments text-base"></i>
+                <span class="text-[10px] mt-0.5">Чаты</span>
+                <span id="unread-badge" class="absolute -top-1 right-2 bg-emerald-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">2</span>
+            </button>
+            <button id="nav-profile" class="flex flex-col items-center hover:text-white transition">
+                <i class="fa-solid fa-user-shield text-base"></i>
+                <span class="text-[10px] mt-0.5">Сосед</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script>
+        // Neighborhood Database / State
+        let currentDistrict = "Центральный";
+        
+        let posts = [
+            {
+                id: 1,
+                author: "Алексей С.",
+                address: "ул. Ленина, 14",
+                avatar: "https://placehold.co/100x100/10b981/ffffff?text=АС",
+                category: "🚨 Срочно / ЧП",
+                caption: "Кто потерял собаку? Бегает у второго подъезда, на вид испуганная, в ошейнике. #потеряшки #собака",
+                type: "image",
+                url: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&auto=format&fit=crop&q=80",
+                likes: 42,
+                isLiked: false,
+                comments: [
+                    { author: "Марина", text: "Ой, это кажется пес из 5-го дома! Сейчас напишу хозяйке.", time: "10 мин назад" },
+                    { author: "Игорь", text: "Уже забрали домой, спасибо неравнодушным!", time: "2 мин назад" }
+                ]
+            },
+            {
+                id: 2,
+                author: "Елена К.",
+                address: "пр. Мира, 32",
+                avatar: "https://placehold.co/100x100/3b82f6/ffffff?text=ЕК",
+                category: "🚗 Парковка / Дорога",
+                caption: "Ребята, кто припарковался на месте для инвалидов у супермаркета? Эвакуатор уже едет! ⚠️ #парковка",
+                type: "image",
+                url: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=600&auto=format&fit=crop&q=80",
+                likes: 18,
+                isLiked: true,
+                comments: [
+                    { author: "Сергей", text: "Спасибо за предупреждение, бегу переставить!", time: "15 мин назад" }
+                ]
+            },
+            {
+                id: 3,
+                author: "Дмитрий В.",
+                address: "ул. Советская, 8",
+                avatar: "https://placehold.co/100x100/f59e0b/ffffff?text=ДВ",
+                category: "🎉 Мероприятия и жизнь",
+                caption: "Закат сегодня над нашим двором просто невероятный! Кто тоже любуется? 🌅✨ #красота #нашрайон",
+                type: "video",
+                url: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1186-large.mp4",
+                likes: 135,
+                isLiked: false,
+                comments: [
+                    { author: "Ольга", text: "Шикарный вид!", time: "час назад" }
+                ]
+            }
+        ];
+
+        let chats = [
+            { id: 1, name: "Сосед с 3-го этажа", address: "кв. 45", avatar: "https://placehold.co/100x100/3b82f6/ffffff?text=С3", lastMessage: "Привет! Перфоратор выключил, извините за шум)", time: "14:15", unread: 1 },
+            { id: 2, name: "Мария (родительский чат)", address: "Детская площадка", avatar: "https://placehold.co/100x100/ec4899/ffffff?text=МД", lastMessage: "Кто сегодня вечером ведет детей на каток?", time: "Вчера", unread: 1 },
+            { id: 3, name: "Иван Автолюбитель", address: "Паркинг блок Б", avatar: "https://placehold.co/100x100/10b981/ffffff?text=ИА", lastMessage: "Фары забыли выключить на синем Hyundai", time: "Пн", unread: 0 }
+        ];
+
+        let activeChatMessages = {
+            1: [
+                { sender: 'them', text: "Здравствуйте! Извините, что ремонт затянулся.", time: "14:10" },
+                { sender: 'me', text: "Ничего страшного, главное до 19:00 закончить) Спасибо!", time: "14:12" },
+                { sender: 'them', text: "Привет! Перфоратор выключил, извините за шум)", time: "14:15" }
+            ],
+            2: [
+                { sender: 'them', text: "Кто сегодня вечером ведет детей на каток?", time: "Вчера" }
+            ],
+            3: [
+                { sender: 'them', text: "Фары забыли выключить на синем Hyundai", time: "Пн" }
+            ],
+            101: [
+                { sender: 'them', text: "📢 Официальные новости ЖК и района. Вода будет отключена в четверг с 10:00 до 14:00.", time: "10:00" }
+            ],
+            102: [
+                { sender: 'them', text: "🐕 Нашли кота у 4 подъезда, рыжий пушистый. Чей?", time: "12:00" }
+            ],
+            103: [
+                { sender: 'them', text: "Кто закроет проезд у шлагбаума? Скорая не может проехать.", time: "13:30" }
+            ]
+        };
+
+        let currentActiveChatId = null;
+        let currentCommentPostId = null;
+        let selectedFileUrl = null;
+        let selectedFileType = 'image';
+
+        // DOM elements
+        const feedContainer = document.getElementById('feed-view');
+        const chatView = document.getElementById('chat-view');
+        const chatRoomView = document.getElementById('chat-room-view');
+        const chatListContainer = document.getElementById('chat-list');
+        const roomMessagesContainer = document.getElementById('room-messages');
+        const commentsModal = document.getElementById('comments-modal');
+        const commentsList = document.getElementById('comments-list');
+        const uploadModal = document.getElementById('upload-modal');
+        const districtModal = document.getElementById('district-modal');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
+
+        // Render District Feed
+        function renderFeed() {
+            feedContainer.innerHTML = '';
+            posts.forEach((post) => {
+                const item = document.createElement('div');
+                item.className = 'snap-item relative w-full h-full flex items-center justify-center bg-zinc-950 overflow-hidden';
+                
+                let mediaElement = '';
+                if (post.type === 'video') {
+                    mediaElement = `<video src="${post.url}" class="absolute inset-0 w-full h-full object-cover" loop muted playsinline autoplay></video>`;
+                } else {
+                    mediaElement = `<img src="${post.url}" class="absolute inset-0 w-full h-full object-cover" alt="Post media" onerror="this.src='https://placehold.co/600x800/18181b/ffffff?text=Media+Error'">`;
+                }
+
+                item.innerHTML = `
+                    ${mediaElement}
+                    <!-- Dark Gradient Overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none"></div>
+
+                    <!-- Right Sidebar Actions -->
+                    <div class="absolute right-3 bottom-20 z-20 flex flex-col items-center space-y-4">
+                        <div class="relative">
+                            <img src="${post.avatar}" class="w-12 h-12 rounded-full border-2 border-emerald-500 object-cover" alt="Avatar">
+                            <button class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <button onclick="toggleLike(${post.id})" class="flex flex-col items-center text-white focus:outline-none group">
+                            <div class="w-11 h-11 bg-black/50 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-black/70 transition border border-zinc-700">
+                                <i class="fa-solid fa-heart text-xl ${post.isLiked ? 'text-red-500 scale-110' : 'text-white'} transition-transform"></i>
+                            </div>
+                            <span class="text-xs font-semibold mt-1">${post.likes}</span>
+                        </button>
+                        <button onclick="openComments(${post.id})" class="flex flex-col items-center text-white focus:outline-none group">
+                            <div class="w-11 h-11 bg-black/50 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-black/70 transition border border-zinc-700">
+                                <i class="fa-solid fa-comment-dots text-xl"></i>
+                            </div>
+                            <span class="text-xs font-semibold mt-1">${post.comments.length}</span>
+                        </button>
+                        <button onclick="sharePost()" class="flex flex-col items-center text-white focus:outline-none group">
+                            <div class="w-11 h-11 bg-black/50 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-black/70 transition border border-zinc-700">
+                                <i class="fa-solid fa-share text-lg"></i>
+                            </div>
+                            <span class="text-xs font-semibold mt-1">Поделиться</span>
+                        </button>
+                    </div>
+
+                    <!-- Bottom Post Info -->
+                    <div class="absolute left-4 bottom-20 right-20 z-20 text-left pointer-events-auto">
+                        <div class="inline-block bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full mb-2">
+                            ${post.category}
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <h4 class="font-bold text-sm text-white drop-shadow">${post.author}</h4>
+                            <span class="text-xs text-zinc-400">• ${post.address}</span>
+                        </div>
+                        <p class="text-sm text-zinc-200 mt-1.5 drop-shadow line-clamp-3 leading-snug">${post.caption}</p>
+                        <div class="flex items-center space-x-2 mt-2 text-xs text-emerald-400">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>Район ${currentDistrict}</span>
+                        </div>
+                    </div>
+                `;
+                feedContainer.appendChild(item);
+            });
+
+            setupVideoObserver();
+        }
+
+        // Intersection Observer for autoplaying video posts
+        function setupVideoObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if (video) {
+                        if (entry.isIntersecting) {
+                            video.play().catch(e => console.log("Autoplay blocked:", e));
+                        } else {
+                            video.pause();
+                        }
+                    }
+                });
+            }, { threshold: 0.6 });
+
+            document.querySelectorAll('.snap-item').forEach(item => observer.observe(item));
+        }
+
+        // Toggle Like
+        window.toggleLike = function(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (post) {
+                post.isLiked = !post.isLiked;
+                post.likes += post.isLiked ? 1 : -1;
+                renderFeed();
+            }
+        };
+
+        window.sharePost = function() {
+            alert("Ссылка на районную новость скопирована! Отправьте её соседям в чат.");
+        };
+
+        // Render Chat Contacts List
+        function renderChats() {
+            chatListContainer.innerHTML = '';
+            chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-3 bg-zinc-900/60 hover:bg-zinc-900 rounded-2xl cursor-pointer transition border border-zinc-800/60';
+                item.onclick = () => openChatRoom(chat.id);
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="relative">
+                            <img src="${chat.avatar}" class="w-12 h-12 rounded-full object-cover border border-zinc-700" alt="Avatar">
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-black"></div>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h4 class="font-bold text-sm text-white">${chat.name}</h4>
+                            </div>
+                            <span class="text-[10px] text-emerald-400">${chat.address}</span>
+                            <p class="text-xs text-zinc-400 mt-0.5 truncate max-w-[170px]">${chat.lastMessage}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end space-y-1">
+                        <span class="text-[10px] text-zinc-500">${chat.time}</span>
+                        ${chat.unread > 0 ? `<span class="bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">${chat.unread}</span>` : ''}
+                    </div>
+                `;
+                chatListContainer.appendChild(item);
+            });
+        }
+
+        // Open Chat Room
+        window.openChatRoom = function(chatId) {
+            currentActiveChatId = chatId;
+            let chatName = "Сосед";
+            let chatAvatar = "https://placehold.co/100x100/10b981/ffffff?text=Н";
+            let chatStatus = "в сети · рядом с вами";
+
+            if (chatId > 100) {
+                if (chatId === 101) { chatName = "📢 Новости и ЧП Района"; chatAvatar = "https://placehold.co/100x100/10b981/ffffff?text=НВ"; chatStatus = "официальный канал · 1.4к участников"; }
+                if (chatId === 102) { chatName = "🐕 Потеряшки и Находки"; chatAvatar = "https://placehold.co/100x100/f59e0b/ffffff?text=ПЗ"; chatStatus = "помощь животным · 890 участников"; }
+                if (chatId === 103) { chatName = "🚗 Парковка и Дороги"; chatAvatar = "https://placehold.co/100x100/3b82f6/ffffff?text=ПР"; chatStatus = "авточат · 540 участников"; }
+            } else {
+                const chat = chats.find(c => c.id === chatId);
+                if (chat) {
+                    chatName = chat.name;
+                    chatAvatar = chat.avatar;
+                    chat.unread = 0;
+                    updateUnreadBadge();
+                    renderChats();
+                }
+            }
+
+            document.getElementById('room-name').innerText = chatName;
+            document.getElementById('room-avatar').src = chatAvatar;
+            document.getElementById('room-status').innerText = chatStatus;
+
+            renderMessages();
+            chatRoomView.classList.remove('translate-x-full');
+        };
+
+        // Render Messages in Room
+        function renderMessages() {
+            roomMessagesContainer.innerHTML = '';
+            const messages = activeChatMessages[currentActiveChatId] || [];
+            messages.forEach(msg => {
+                const bubble = document.createElement('div');
+                const isMe = msg.sender === 'me';
+                bubble.className = `max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${isMe ? 'bg-emerald-600 text-white self-end rounded-br-none' : 'bg-zinc-800 text-zinc-200 self-start rounded-bl-none'}`;
+                bubble.innerHTML = `
+                    <p>${msg.text}</p>
+                    <span class="block text-[9px] ${isMe ? 'text-emerald-200' : 'text-zinc-400'} text-right mt-1">${msg.time}</span>
+                `;
+                roomMessagesContainer.appendChild(bubble);
+            });
+            roomMessagesContainer.scrollTop = roomMessagesContainer.scrollHeight;
+        }
+
+        // Send Message
+        document.getElementById('send-msg-btn').onclick = sendMessage;
+        document.getElementById('message-input').onkeypress = (e) => {
+            if (e.key === 'Enter') sendMessage();
+        };
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text || !currentActiveChatId) return;
+
+            if (!activeChatMessages[currentActiveChatId]) {
+                activeChatMessages[currentActiveChatId] = [];
+            }
+
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            activeChatMessages[currentActiveChatId].push({ sender: 'me', text, time: timeStr });
+            
+            if (currentActiveChatId < 100) {
+                const chat = chats.find(c => c.id === currentActiveChatId);
+                if (chat) {
+                    chat.lastMessage = text;
+                    chat.time = timeStr;
+                }
+                renderChats();
+            }
+
+            input.value = '';
+            renderMessages();
+
+            // Simulate neighbor reply
+            if (currentActiveChatId < 100) {
+                setTimeout(() => {
+                    activeChatMessages[currentActiveChatId].push({ sender: 'them', text: "Понял вас, спасибо за информацию! 👍", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+                    const chat = chats.find(c => c.id === currentActiveChatId);
+                    if (chat) chat.lastMessage = "Понял вас, спасибо за информацию! 👍";
+                    renderMessages();
+                    renderChats();
+                }, 2000);
+            }
+        }
+
+        // Comments Management
+        window.openComments = function(postId) {
+            currentCommentPostId = postId;
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            document.getElementById('comments-title').innerText = `Обсуждение соседей (${post.comments.length})`;
+            renderCommentsList(post);
+            commentsModal.classList.remove('translate-y-full');
+        };
+
+        function renderCommentsList(post) {
+            commentsList.innerHTML = '';
+            if (post.comments.length === 0) {
+                commentsList.innerHTML = `<p class="text-center text-xs text-zinc-500 mt-10">Пока нет комментариев. Напишите первым!</p>`;
+                return;
+            }
+            post.comments.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'flex items-start space-x-3';
+                item.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-emerald-400">${c.author[0]}</div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-xs text-zinc-300">${c.author}</span>
+                            <span class="text-[10px] text-zinc-500">${c.time}</span>
+                        </div>
+                        <p class="text-xs text-zinc-200 mt-0.5">${c.text}</p>
+                    </div>
+                `;
+                commentsList.appendChild(item);
+            });
+        }
+
+        document.getElementById('send-comment-btn').onclick = () => {
+            const input = document.getElementById('comment-input');
+            const text = input.value.trim();
+            if (!text || !currentCommentPostId) return;
+
+            const post = posts.find(p => p.id === currentCommentPostId);
+            if (post) {
+                post.comments.push({ author: "Вы (Сосед)", text, time: "Только что" });
+                input.value = '';
+                document.getElementById('comments-title').innerText = `Обсуждение соседей (${post.comments.length})`;
+                renderCommentsList(post);
+                renderFeed();
+            }
+        };
+
+        document.getElementById('close-comments-btn').onclick = () => {
+            commentsModal.classList.add('translate-y-full');
+        };
+
+        // File Upload Handling
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFileType = file.type.startsWith('video') ? 'video' : 'image';
+                selectedFileUrl = URL.createObjectURL(file);
+                
+                previewContainer.innerHTML = '';
+                if (selectedFileType === 'video') {
+                    previewContainer.innerHTML = `<video src="${selectedFileUrl}" class="w-full h-full object-cover" autoplay muted loop></video>`;
+                } else {
+                    previewContainer.innerHTML = `<img src="${selectedFileUrl}" class="w-full h-full object-cover" alt="Preview">`;
+                }
+            }
+        };
+
+        document.getElementById('open-upload-btn').onclick = () => uploadModal.classList.remove('hidden');
+        document.getElementById('nav-create-quick').onclick = () => uploadModal.classList.remove('hidden');
+        document.getElementById('close-upload-btn').onclick = () => uploadModal.classList.add('hidden');
+
+        document.getElementById('submit-upload-btn').onclick = () => {
+            const caption = document.getElementById('upload-caption').value.trim() || "Срочные новости нашего двора!";
+            const category = document.getElementById('post-category').value;
+            
+            const newPost = {
+                id: Date.now(),
+                author: "Вы (Сосед)",
+                address: "ул. Новая, 12",
+                avatar: "https://placehold.co/100x100/10b981/ffffff?text=В",
+                category: category,
+                caption: caption,
+                type: selectedFileType,
+                url: selectedFileUrl || (selectedFileType === 'video' ? 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1186-large.mp4' : 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80'),
+                likes: 1,
+                isLiked: true,
+                comments: []
+            };
+
+            posts.unshift(newPost);
+            renderFeed();
+            uploadModal.classList.add('hidden');
+            document.getElementById('upload-caption').value = '';
+            fileInput.value = '';
+            previewContainer.innerHTML = `<span class="text-xs text-zinc-500">Предпросмотр фото/видео</span>`;
+            selectedFileUrl = null;
+            
+            switchView('feed');
+        };
+
+        // District Selector Modal
+        window.openDistrictSelector = function() {
+            districtModal.classList.remove('hidden');
+        };
+
+        window.closeDistrictSelector = function() {
+            districtModal.classList.add('hidden');
+        };
+
+        window.selectDistrict = function(name) {
+            currentDistrict = name;
+            document.getElementById('current-district-label').innerText = name;
+            closeDistrictSelector();
+            renderFeed();
+        };
+
+        window.openNewGroupModal = function() {
+            alert("Создание нового районного чата доступно старостам домов и активистам района!");
+        };
+
+        // Navigation Switching
+        const navHome = document.getElementById('nav-home');
+        const navChat = document.getElementById('nav-chat');
+        const navProfile = document.getElementById('nav-profile');
+
+        function switchView(view) {
+            if (view === 'feed') {
+                chatView.classList.add('translate-x-full');
+                chatRoomView.classList.add('translate-x-full');
+                navHome.classList.add('text-white');
+                navChat.classList.remove('text-white');
+            } else if (view === 'chat') {
+                renderChats();
+                chatView.classList.remove('translate-x-full');
+                navChat.classList.add('text-white');
+                navHome.classList.remove('text-white');
+            }
+        }
+
+        navHome.onclick = () => switchView('feed');
+        navChat.onclick = () => switchView('chat');
+        navProfile.onclick = () => alert("Ваш профиль соседа: верифицирован по адресу ул. Новая, 12.");
+
+        document.getElementById('close-chat-btn').onclick = () => {
+            chatView.classList.add('translate-x-full');
+            navChat.classList.remove('text-white');
+            navHome.classList.add('text-white');
+        };
+
+        document.getElementById('close-room-btn').onclick = () => {
+            chatRoomView.classList.add('translate-x-full');
+        };
+
+        window.switchDistrictTab = function(tab) {
+            if (tab === 'following') {
+                document.getElementById('tab-following').className = 'text-white border-b-2 border-emerald-500 pb-0.5 font-bold';
+                document.getElementById('tab-feed').className = 'hover:text-white transition font-normal';
+                alert("Показаны только избранные дома и подписки вашего квартала.");
+            } else {
+                document.getElementById('tab-feed').className = 'text-white border-b-2 border-emerald-500 pb-0.5 font-bold';
+                document.getElementById('tab-following').className = 'hover:text-white transition font-normal';
+            }
+        }
+
+        function updateUnreadBadge() {
+            const totalUnread = chats.reduce((sum, c) => sum + c.unread, 0);
+            const badge = document.getElementById('unread-badge');
+            if (totalUnread > 0) {
+                badge.innerText = totalUnread;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // Initial Initialization
+        window.onload = function() {
+            renderFeed();
+            renderChats();
+            updateUnreadBadge();
+        };
+    </script>
+</body>
+</html>
