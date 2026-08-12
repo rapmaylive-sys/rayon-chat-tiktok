@@ -587,13 +587,35 @@
             document.getElementById('toast-text').innerText = `${title}: ${desc}`;
             toast.classList.remove('opacity-0', 'pointer-events-none');
             setTimeout(() => {
-                toast.classList.0 = toast.classList.add('opacity-0', 'pointer-events-none');
+                toast.classList.add('opacity-0', 'pointer-events-none');
             }, 3000);
         }
 
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
+
+        // Attach functions to window scope to ensure they are accessible globally
+        window.switchTab = switchTab;
+        window.handleFabClick = handleFabClick;
+        window.filterChats = filterChats;
+        window.openNewChatPrompt = openNewChatPrompt;
+        window.closeNewChatModal = closeNewChatModal;
+        window.submitNewChat = submitNewChat;
+        window.openChatRoom = openChatRoom;
+        window.closeChatRoom = closeChatRoom;
+        window.sendChatMessage = sendChatMessage;
+        window.attachMediaToChat = attachMediaToChat;
+        window.openCreateModal = openCreateModal;
+        window.closeCreateModal = closeCreateModal;
+        window.previewMedia = previewMedia;
+        window.publishNewPost = publishNewPost;
+        window.likePost = likePost;
+        window.openSosModal = openSosModal;
+        window.closeSosModal = closeSosModal;
+        window.sendSosAlert = sendSosAlert;
+        window.openInfoModal = openInfoModal;
+        window.closeInfoModal = closeInfoModal;
     </script>
 </body>
 </html>
