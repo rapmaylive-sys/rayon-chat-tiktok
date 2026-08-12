@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Чат Района — Ростов-на-Дону, ЖК Суворовский</title>
+    <title>Чат Района — Ростов-на-Дону</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for Icons -->
@@ -51,7 +51,7 @@
         <header class="absolute top-0 left-0 right-0 z-30 flex justify-between items-center px-4 py-3 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-auto">
             <div class="flex items-center space-x-4 text-zinc-400 font-semibold text-sm">
                 <button id="tab-following" onclick="switchDistrictTab('following')" class="hover:text-white transition">Подписки</button>
-                <button id="tab-feed" onclick="switchDistrictTab('feed')" class="text-white border-b-2 border-emerald-500 pb-0.5 font-bold">🏠 Мой Район</button>
+                <button id="tab-feed" onclick="switchDistrictTab('feed')" class="text-white border-b-2 border-emerald-500 pb-0.5 font-bold">🏠 Лента района</button>
             </div>
             <div class="flex items-center space-x-3">
                 <button onclick="openDistrictSelector()" class="bg-zinc-800/80 backdrop-blur text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1.5 border border-zinc-700/60 shadow">
@@ -64,12 +64,12 @@
             </div>
         </header>
 
-        <!-- Main Content Area (Views) -->
+        <!-- Main Content Views -->
         <main id="main-content" class="relative flex-1 w-full h-full overflow-hidden">
             
-            <!-- District Feed View -->
-            <div id="feed-view" class="absolute inset-0 w-full h-full snap-container">
-                <!-- Dynamic posts injected via JS -->
+            <!-- District Feed View (Starts Empty for User Content) -->
+            <div id="feed-view" class="absolute inset-0 w-full h-full snap-container flex flex-col items-center justify-center">
+                <!-- Dynamically populated or Empty State injected here -->
             </div>
 
             <!-- Map View Section -->
@@ -79,53 +79,52 @@
                         <button onclick="switchView('feed')" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-arrow-left text-lg"></i></button>
                         <div>
                             <h2 class="font-bold text-base">Карта Ростова и ЖК</h2>
-                            <p class="text-[10px] text-emerald-400">Метки происшествий и соседей на карте</p>
+                            <p class="text-[10px] text-emerald-400">Метки и посты соседей на карте</p>
                         </div>
                     </div>
-                    <button onclick="openDistrictSelector()" class="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/30 font-semibold"><i class="fa-solid fa-map-pin"></i> Выбрать точку</button>
+                    <button onclick="openDistrictSelector()" class="text-xs bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/30 font-semibold"><i class="fa-solid fa-map-pin"></i> Точка</button>
                 </div>
                 <div id="leaflet-map" class="flex-1 w-full h-full z-10"></div>
             </div>
 
             <!-- Chat Contacts List View -->
             <div id="chat-view" class="absolute inset-0 w-full h-full bg-zinc-950 z-20 flex flex-col transform translate-x-full transition-transform duration-300">
-                <!-- Chat Header -->
                 <div class="px-4 py-3 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900/90 backdrop-blur sticky top-0 z-10 pt-12">
                     <div class="flex items-center space-x-3">
                         <button id="close-chat-btn" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-arrow-left text-lg"></i></button>
                         <div>
-                            <h2 class="font-bold text-base">Соседи и чаты</h2>
-                            <p class="text-[10px] text-emerald-400" id="online-neighbors-count">онлайн в Суворовском: 245 соседей</p>
+                            <h2 class="font-bold text-base">Чаты с соседями</h2>
+                            <p class="text-[10px] text-emerald-400" id="online-neighbors-count">в сети: 184 соседа</p>
                         </div>
                     </div>
                     <button onclick="openNewGroupModal()" class="text-emerald-400 font-medium text-xs bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20"><i class="fa-solid fa-users"></i> Чат дома</button>
                 </div>
 
-                <!-- Neighborhood Quick Groups / Channels -->
+                <!-- Neighborhood Channels -->
                 <div class="px-4 py-3 border-b border-zinc-800 bg-zinc-900/40">
-                    <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Каналы района</span>
+                    <span class="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Каналы микрорайона</span>
                     <div class="flex space-x-2 mt-2 overflow-x-auto no-scrollbar pb-1">
                         <div onclick="openChatRoom(101)" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2.5 rounded-2xl cursor-pointer w-28 flex flex-col items-center text-center transition">
                             <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-1 text-sm"><i class="fa-solid fa-bullhorn"></i></div>
                             <span class="font-bold text-xs truncate w-full">Новости ЖК</span>
-                            <span class="text-[9px] text-zinc-500">3.8к участников</span>
+                            <span class="text-[9px] text-zinc-500">Общий канал</span>
                         </div>
                         <div onclick="openChatRoom(102)" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2.5 rounded-2xl cursor-pointer w-28 flex flex-col items-center text-center transition">
                             <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mb-1 text-sm"><i class="fa-solid fa-shield-dog"></i></div>
                             <span class="font-bold text-xs truncate w-full">Потеряшки</span>
-                            <span class="text-[9px] text-zinc-500">1.2к участников</span>
+                            <span class="text-[9px] text-zinc-500">Животные и вещи</span>
                         </div>
                         <div onclick="openChatRoom(103)" class="flex-shrink-0 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2.5 rounded-2xl cursor-pointer w-28 flex flex-col items-center text-center transition">
                             <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mb-1 text-sm"><i class="fa-solid fa-car"></i></div>
-                            <span class="font-bold text-xs truncate w-full">Парковка / Выезд</span>
-                            <span class="text-[9px] text-zinc-500">2.4к участников</span>
+                            <span class="font-bold text-xs truncate w-full">Парковка</span>
+                            <span class="text-[9px] text-zinc-500">Выезд / Дворы</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Chat Contacts / Message List -->
+                <!-- Chat Contacts List -->
                 <div id="chat-list" class="flex-1 overflow-y-auto p-4 space-y-3">
-                    <!-- Contact items injected via JS -->
+                    <!-- Contacts injected dynamically -->
                 </div>
             </div>
 
@@ -137,19 +136,15 @@
                         <img id="room-avatar" src="" class="w-9 h-9 rounded-full object-cover border border-zinc-700" alt="Avatar">
                         <div>
                             <h3 id="room-name" class="font-bold text-sm">Сосед</h3>
-                            <span id="room-status" class="text-xs text-emerald-400">в сети · ЖК Суворовский</span>
+                            <span id="room-status" class="text-xs text-emerald-400">в сети</span>
                         </div>
                     </div>
-                    <button class="text-zinc-400 hover:text-white"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                 </div>
                 <!-- Messages Container -->
-                <div id="room-messages" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col">
-                    <!-- Messages injected via JS -->
-                </div>
+                <div id="room-messages" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col"></div>
                 <!-- Message Input -->
                 <div class="p-3 bg-zinc-900 border-t border-zinc-800 flex items-center space-x-2">
-                    <button class="text-zinc-400 hover:text-white p-2"><i class="fa-regular fa-image text-xl"></i></button>
-                    <input id="message-input" type="text" placeholder="Написать соседу..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <input id="message-input" type="text" placeholder="Написать сообщение соседям..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
                     <button id="send-msg-btn" class="bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-emerald-600 transition">
                         <i class="fa-solid fa-paper-plane text-sm"></i>
                     </button>
@@ -159,91 +154,85 @@
             <!-- Comments Modal Drawer -->
             <div id="comments-modal" class="absolute inset-x-0 bottom-0 h-[70%] bg-zinc-900 rounded-t-2xl z-40 transform translate-y-full transition-transform duration-300 flex flex-col border-t border-zinc-800 shadow-2xl">
                 <div class="p-3 border-b border-zinc-800 flex items-center justify-between">
-                    <h3 id="comments-title" class="font-bold text-sm mx-auto">Обсуждение (0)</h3>
+                    <h3 id="comments-title" class="font-bold text-sm mx-auto">Обсуждение поста (0)</h3>
                     <button id="close-comments-btn" class="text-zinc-400 hover:text-white px-2"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
-                <div id="comments-list" class="flex-1 overflow-y-auto p-4 space-y-4">
-                    <!-- Comments injected here -->
-                </div>
+                <div id="comments-list" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
                 <div class="p-3 bg-zinc-950 border-t border-zinc-800 flex items-center space-x-2">
-                    <input id="comment-input" type="text" placeholder="Написать комментарий соседям..." class="flex-1 bg-zinc-800 text-white px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <input id="comment-input" type="text" placeholder="Оставить комментарий..." class="flex-1 bg-zinc-800 text-white px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
                     <button id="send-comment-btn" class="bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-emerald-600 transition">Отправить</button>
                 </div>
             </div>
 
             <!-- Upload Post Modal -->
-            <div id="upload-modal" class="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div id="upload-modal" class="absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
                 <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl p-5 flex flex-col space-y-4 shadow-2xl animate-fade-in">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-lg text-white">Новость района</h3>
+                        <h3 class="font-bold text-lg text-white">Новая публикация</h3>
                         <button id="close-upload-btn" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
                     </div>
                     <div class="space-y-3">
                         <div>
-                            <label class="block text-xs font-medium text-zinc-400 mb-1">Категория события</label>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">Категория</label>
                             <select id="post-category" class="w-full bg-zinc-800 text-white p-2.5 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500">
                                 <option value="🚨 Срочно / ЧП">🚨 Срочно / ЧП в районе</option>
                                 <option value="🐕 Потеряшки / Находки">🐕 Потеряшки / Находки</option>
                                 <option value="🚗 Парковка / Дорога">🚗 Парковка / Дорога</option>
-                                <option value="🌿 Благоустройство">🌿 Благоустройство и жалобы</option>
-                                <option value="🎉 Мероприятия и жизнь">🎉 Мероприятия и жизнь</option>
+                                <option value="🌿 Благоустройство">🌿 Благоустройство</option>
+                                <option value="🎉 Жизнь района">🎉 Жизнь района</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-zinc-400 mb-1">Фото или видео с места</label>
+                            <label class="block text-xs font-medium text-zinc-400 mb-1">Фото или видео</label>
                             <input id="file-input" type="file" accept="image/*,video/*" class="w-full text-xs text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-white hover:file:bg-emerald-600 cursor-pointer">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-zinc-400 mb-1">Описание и адрес</label>
-                            <textarea id="upload-caption" placeholder="Что происходит? Укажите ул. Беляева, Еременко, б-р Комарова..." rows="3" class="w-full bg-zinc-800 text-white p-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
+                            <textarea id="upload-caption" placeholder="Что происходит? Укажите улицу или дом..." rows="3" class="w-full bg-zinc-800 text-white p-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
                         </div>
                         <div id="preview-container" class="w-full h-32 bg-zinc-950 rounded-xl overflow-hidden flex items-center justify-center border border-dashed border-zinc-700 relative">
-                            <span class="text-xs text-zinc-500">Предпросмотр фото/видео</span>
+                            <span class="text-xs text-zinc-500">Предпросмотр медиафайла</span>
                         </div>
                     </div>
-                    <button id="submit-upload-btn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2.5 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 transition">Опубликовать в районе</button>
+                    <button id="submit-upload-btn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-2.5 rounded-xl font-bold text-sm shadow-lg hover:opacity-90 transition">Опубликовать</button>
                 </div>
             </div>
 
-            <!-- District / Location Selector Modal with Map & Presets -->
+            <!-- District Selector Modal -->
             <div id="district-modal" class="absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
                 <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-2xl p-5 flex flex-col space-y-4 shadow-2xl">
                     <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-base text-white">Выбор вашего района и ЖК</h3>
+                        <h3 class="font-bold text-base text-white">Выбор района / ЖК</h3>
                         <button onclick="closeDistrictSelector()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
                     </div>
-                    <p class="text-xs text-zinc-400">Выберите готовый популярный микрорайон Ростова-на-Дону или укажите точную точку на интерактивной карте:</p>
-                    
+                    <p class="text-xs text-zinc-400">Выберите микрорайон Ростова-на-Дону:</p>
                     <div class="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-1">
                         <button onclick="selectDistrictPreset('ЖК Суворовский', 47.302, 39.635)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
-                            <span>🏘️ ЖК «Суворовский» (Октябрьский р-н)</span>
-                            <span class="text-[10px] text-emerald-400 font-bold">Вы здесь</span>
-                        </button>
-                        <button onclick="selectDistrictPreset('Севен-Скайз', 47.310, 39.620)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
-                            <span>🏢 ЖК «Севен Скайз»</span>
-                            <span class="text-[10px] text-zinc-400">Суворовский</span>
+                            <span>🏘️ ЖК «Суворовский»</span>
+                            <span class="text-[10px] text-emerald-400 font-bold">Активен</span>
                         </button>
                         <button onclick="selectDistrictPreset('Центр (Буденновский)', 47.222, 39.718)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
-                            <span>🏙️ Центр (Буденновский / Большая Садовая)</span>
-                            <span class="text-[10px] text-zinc-400">Ростов</span>
+                            <span>🏙️ Центр (Большая Садовая)</span>
                         </button>
                         <button onclick="selectDistrictPreset('Северный (СЖМ)', 47.290, 39.715)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
-                            <span>🌳 Северный микрорайон (СЖМ)</span>
-                            <span class="text-[10px] text-zinc-400">Пр. Космонавтов</span>
+                            <span>🌳 Северный (СЖМ)</span>
                         </button>
                         <button onclick="selectDistrictPreset('Западный (ЗЖМ)', 47.228, 39.630)" class="w-full text-left px-3.5 py-2.5 rounded-xl bg-zinc-800/60 hover:bg-emerald-500/20 hover:border-emerald-500 border border-zinc-700 text-xs font-medium transition flex items-center justify-between">
                             <span>🏡 Западный (ЗЖМ)</span>
-                            <span class="text-[10px] text-zinc-400">Пр. Стачки / Зорге</span>
                         </button>
                     </div>
+                    <button onclick="closeDistrictSelector()" class="w-full bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-600 transition">Готово</button>
+                </div>
+            </div>
 
-                    <div class="pt-2 border-t border-zinc-800 flex flex-col space-y-2">
-                        <button onclick="useGpsLocation()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-emerald-400 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition border border-zinc-700">
-                            <i class="fa-solid fa-location-crosshairs"></i>
-                            <span>Определить по GPS / Геолокации</span>
-                        </button>
-                        <button onclick="closeDistrictSelector()" class="w-full bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-600 transition">Готово</button>
-                    </div>
+            <!-- Toast Notification -->
+            <div id="toast-notification" class="absolute top-16 left-4 right-4 z-50 bg-zinc-900/95 border border-emerald-500/50 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 transform -translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div class="flex-1">
+                    <h5 id="toast-title" class="font-bold text-xs text-emerald-400">Уведомление</h5>
+                    <p id="toast-desc" class="text-xs text-zinc-300">Действие выполнено</p>
                 </div>
             </div>
 
@@ -265,7 +254,7 @@
             <button id="nav-chat" class="flex flex-col items-center hover:text-white transition relative">
                 <i class="fa-solid fa-comments text-base"></i>
                 <span class="text-[10px] mt-0.5">Чаты</span>
-                <span id="unread-badge" class="absolute -top-1 right-2 bg-emerald-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">2</span>
+                <span id="unread-badge" class="absolute -top-1 right-2 bg-emerald-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold hidden">0</span>
             </button>
             <button id="nav-profile" class="flex flex-col items-center hover:text-white transition">
                 <i class="fa-solid fa-user-shield text-base"></i>
@@ -275,94 +264,27 @@
 
     </div>
 
-    <!-- Leaflet JS for Map -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
-        // Neighborhood Database / State anchored in Rostov-on-Don (Suvorovskiy default)
         let currentDistrict = "ЖК Суворовский";
         let currentCoords = [47.302, 39.635];
         let leafletMap = null;
         let mapInitialized = false;
         
-        let posts = [
-            {
-                id: 1,
-                author: "Алексей С.",
-                address: "ул. Беляева, 8",
-                avatar: "https://placehold.co/100x100/10b981/ffffff?text=АС",
-                category: "🚨 Срочно / ЧП",
-                caption: "Кто потерял собаку в Суворовском? Бегает у второго подъезда, на вид испуганная, в ошейнике. #потеряшки #суворовский",
-                type: "image",
-                url: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&auto=format&fit=crop&q=80",
-                likes: 42,
-                isLiked: false,
-                coords: [47.303, 39.632],
-                comments: [
-                    { author: "Марина", text: "Ой, это пес из соседнего двора на Еременко! Сейчас напишу хозяевам.", time: "10 мин назад" },
-                    { author: "Игорь", text: "Уже забрали домой, спасибо неравнодушным соседям!", time: "2 мин назад" }
-                ]
-            },
-            {
-                id: 2,
-                author: "Елена К.",
-                address: "ул. академика П.А. Левицкого, 4",
-                avatar: "https://placehold.co/100x100/3b82f6/ffffff?text=ЕК",
-                category: "🚗 Парковка / Дорога",
-                caption: "Ребята, кто перекрыл выезд из Суворовского на Ученическую? Пробка жуткая с самого утра! ⚠️ #пробки #дорога",
-                type: "image",
-                url: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=600&auto=format&fit=crop&q=80",
-                likes: 18,
-                isLiked: true,
-                coords: [47.298, 39.640],
-                comments: [
-                    { author: "Сергей", text: "Там автобус сломался на полосе, объезжайте через дворы!", time: "15 мин назад" }
-                ]
-            },
-            {
-                id: 3,
-                author: "Дмитрий В.",
-                address: "б-р Имени Устинова",
-                avatar: "https://placehold.co/100x100/f59e0b/ffffff?text=ДВ",
-                category: "🎉 Мероприятия и жизнь",
-                caption: "Закат сегодня над нашими высотками в Суворовском просто невероятный! Кто тоже любуется с балкона? 🌅✨ #ростов #суворовский",
-                type: "video",
-                url: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1186-large.mp4",
-                likes: 135,
-                isLiked: false,
-                coords: [47.305, 39.638],
-                comments: [
-                    { author: "Ольга", text: "Шикарный вид из 7 литеры!", time: "час назад" }
-                ]
-            }
-        ];
+        // Zero initial posts (clean slate for user uploads)
+        let posts = JSON.parse(localStorage.getItem('rayon_posts')) || [];
 
         let chats = [
-            { id: 1, name: "Сосед из 3-го подъезда", address: "ЖК Суворовский, кв. 45", avatar: "https://placehold.co/100x100/3b82f6/ffffff?text=С3", lastMessage: "Привет! Перфоратор выключил, извините за шум в обед)", time: "14:15", unread: 1 },
-            { id: 2, name: "Мария (Мамы Суворовского)", address: "Детская площадка", avatar: "https://placehold.co/100x100/ec4899/ffffff?text=МД", lastMessage: "Кто сегодня вечером ведет детей на каток у аллеи?", time: "Вчера", unread: 1 },
-            { id: 3, name: "Иван Автолюбитель", address: "Паркинг Суворовский", avatar: "https://placehold.co/100x100/10b981/ffffff?text=ИА", lastMessage: "Фары забыли выключить на белом Kia", time: "Пн", unread: 0 }
+            { id: 1, name: "Сосед из 3-го подъезда", address: "ЖК Суворовский", avatar: "https://placehold.co/100x100/3b82f6/ffffff?text=С3", lastMessage: "Привет! Как обстановка во дворе?", time: "14:15", unread: 0 },
+            { id: 2, name: "Родители Суворовского", address: "Детская площадка", avatar: "https://placehold.co/100x100/ec4899/ffffff?text=РС", lastMessage: "Кто идет гулять на аллею?", time: "Вчера", unread: 0 }
         ];
 
         let activeChatMessages = {
-            1: [
-                { sender: 'them', text: "Здравствуйте! Извините, что ремонт затянулся.", time: "14:10" },
-                { sender: 'me', text: "Ничего страшного, главное до 19:00 закончить) Спасибо!", time: "14:12" },
-                { sender: 'them', text: "Привет! Перфоратор выключил, извините за шум)", time: "14:15" }
-            ],
-            2: [
-                { sender: 'them', text: "Кто сегодня вечером ведет детей на аллею?", time: "Вчера" }
-            ],
-            3: [
-                { sender: 'them', text: "Фары забыли выключить на белом автомобиле", time: "Пн" }
-            ],
-            101: [
-                { sender: 'them', text: "📢 Официальные новости ЖК Суворовский. Плановое отключение воды в четверг с 10:00 до 14:00.", time: "10:00" }
-            ],
-            102: [
-                { sender: 'them', text: "🐕 Нашли кота у 14 дома, пушистый серый. Чей беглец?", time: "12:00" }
-            ],
-            103: [
-                { sender: 'them', text: "Кто закроет проезд у шлагбаума? Скорая не может проехать к парадной.", time: "13:30" }
-            ]
+            1: [{ sender: 'them', name: "Сосед", text: "Привет! Напишите, если что-то нужно по дому.", time: "14:10" }],
+            101: [{ sender: 'them', name: "Админ", text: "📢 Официальный канал новостей микрорайона. Публикуйте важные объявления!", time: "10:00" }],
+            102: [{ sender: 'them', name: "Бюро", text: "🐕 Сюда можно писать о потерянных и найденных домашних животных.", time: "12:00" }],
+            103: [{ sender: 'them', name: "Авточат", text: "🚗 Обсуждение парковки и выезда из дворов.", time: "13:30" }]
         };
 
         let currentActiveChatId = null;
@@ -370,7 +292,6 @@
         let selectedFileUrl = null;
         let selectedFileType = 'image';
 
-        // DOM elements
         const feedContainer = document.getElementById('feed-view');
         const chatView = document.getElementById('chat-view');
         const mapView = document.getElementById('map-view');
@@ -384,9 +305,23 @@
         const fileInput = document.getElementById('file-input');
         const previewContainer = document.getElementById('preview-container');
 
-        // Render District Feed
         function renderFeed() {
             feedContainer.innerHTML = '';
+            
+            if (posts.length === 0) {
+                feedContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center p-8 text-center h-full">
+                        <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-4">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                        <h3 class="font-bold text-base text-white">Лента пока пуста</h3>
+                        <p class="text-xs text-zinc-400 mt-1 max-w-xs">Станьте первыми, кто опубликует новость, фото или видео своего двора в ${currentDistrict}!</p>
+                        <button onclick="document.getElementById('upload-modal').classList.remove('hidden')" class="mt-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg">Создать публикацию</button>
+                    </div>
+                `;
+                return;
+            }
+
             posts.forEach((post) => {
                 const item = document.createElement('div');
                 item.className = 'snap-item relative w-full h-full flex items-center justify-center bg-zinc-950 overflow-hidden';
@@ -395,41 +330,39 @@
                 if (post.type === 'video') {
                     mediaElement = `<video src="${post.url}" class="absolute inset-0 w-full h-full object-cover" loop muted playsinline autoplay></video>`;
                 } else {
-                    mediaElement = `<img src="${post.url}" class="absolute inset-0 w-full h-full object-cover" alt="Post media" onerror="this.src='https://placehold.co/600x800/18181b/ffffff?text=Media+Error'">`;
+                    mediaElement = `<img src="${post.url}" class="absolute inset-0 w-full h-full object-cover" alt="Media" onerror="this.src='https://placehold.co/600x800/18181b/ffffff?text=Фото+Района'">`;
                 }
 
                 item.innerHTML = `
                     ${mediaElement}
-                    <!-- Dark Gradient Overlay -->
                     <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90 pointer-events-none"></div>
 
-                    <!-- Right Sidebar Actions -->
+                    <!-- Right Sidebar -->
                     <div class="absolute right-3 bottom-20 z-20 flex flex-col items-center space-y-4">
                         <div class="relative">
                             <img src="${post.avatar}" class="w-12 h-12 rounded-full border-2 border-emerald-500 object-cover" alt="Avatar">
-                            <button class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-emerald-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"><i class="fa-solid fa-plus"></i></button>
                         </div>
-                        <button onclick="toggleLike(${post.id})" class="flex flex-col items-center text-white focus:outline-none group">
-                            <div class="w-11 h-11 bg-black/50 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-black/70 transition border border-zinc-700">
+                        <button onclick="toggleLike(${post.id})" class="flex flex-col items-center text-white focus:outline-none">
+                            <div class="w-11 h-11 bg-black/50 backdrop-blur rounded-full flex items-center justify-center border border-zinc-700">
                                 <i class="fa-solid fa-heart text-xl ${post.isLiked ? 'text-red-500 scale-110' : 'text-white'} transition-transform"></i>
                             </div>
                             <span class="text-xs font-semibold mt-1">${post.likes}</span>
                         </button>
-                        <button onclick="openComments(${post.id})" class="flex flex-col items-center text-white focus:outline-none group">
-                            <div class="w-11 h-11 bg-black/50 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-black/70 transition border border-zinc-700">
+                        <button onclick="openComments(${post.id})" class="flex flex-col items-center text-white focus:outline-none">
+                            <div class="w-11 h-11 bg-black/50 backdrop-blur rounded-full flex items-center justify-center border border-zinc-700">
                                 <i class="fa-solid fa-comment-dots text-xl"></i>
                             </div>
                             <span class="text-xs font-semibold mt-1">${post.comments.length}</span>
                         </button>
-                        <button onclick="sharePost()" class="flex flex-col items-center text-white focus:outline-none group">
-                            <div class="w-11 h-11 bg-black/50 backdrop-blur rounded-full flex items-center justify-center group-hover:bg-black/70 transition border border-zinc-700">
+                        <button onclick="sharePost()" class="flex flex-col items-center text-white focus:outline-none">
+                            <div class="w-11 h-11 bg-black/50 backdrop-blur rounded-full flex items-center justify-center border border-zinc-700">
                                 <i class="fa-solid fa-share text-lg"></i>
                             </div>
                             <span class="text-xs font-semibold mt-1">Поделиться</span>
                         </button>
                     </div>
 
-                    <!-- Bottom Post Info -->
+                    <!-- Bottom Info -->
                     <div class="absolute left-4 bottom-20 right-20 z-20 text-left pointer-events-auto">
                         <div class="inline-block bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full mb-2">
                             ${post.category}
@@ -441,7 +374,7 @@
                         <p class="text-sm text-zinc-200 mt-1.5 drop-shadow line-clamp-3 leading-snug">${post.caption}</p>
                         <div class="flex items-center space-x-2 mt-2 text-xs text-emerald-400">
                             <i class="fa-solid fa-location-dot"></i>
-                            <span>${currentDistrict}, Ростов-на-Дону</span>
+                            <span>${currentDistrict}, Ростов</span>
                         </div>
                     </div>
                 `;
@@ -457,7 +390,7 @@
                     const video = entry.target.querySelector('video');
                     if (video) {
                         if (entry.isIntersecting) {
-                            video.play().catch(e => console.log("Autoplay blocked:", e));
+                            video.play().catch(e => console.log(e));
                         } else {
                             video.pause();
                         }
@@ -473,15 +406,29 @@
             if (post) {
                 post.isLiked = !post.isLiked;
                 post.likes += post.isLiked ? 1 : -1;
+                savePosts();
                 renderFeed();
             }
         };
 
         window.sharePost = function() {
-            alert("Ссылка на новость Суворовского скопирована в буфер обмена!");
+            showToast("🔗 Ссылка скопирована", "Ссылка на новость скопирована в буфер обмена!");
         };
 
-        // Render Chat Contacts List
+        function showToast(title, desc) {
+            const toast = document.getElementById('toast-notification');
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-desc').innerText = desc;
+            toast.classList.remove('-translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('-translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+
+        function savePosts() {
+            localStorage.setItem('rayon_posts', JSON.stringify(posts));
+        }
+
         function renderChats() {
             chatListContainer.innerHTML = '';
             chats.forEach(chat => {
@@ -490,53 +437,38 @@
                 item.onclick = () => openChatRoom(chat.id);
                 item.innerHTML = `
                     <div class="flex items-center space-x-3">
-                        <div class="relative">
-                            <img src="${chat.avatar}" class="w-12 h-12 rounded-full object-cover border border-zinc-700" alt="Avatar">
-                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-black"></div>
-                        </div>
+                        <img src="${chat.avatar}" class="w-12 h-12 rounded-full object-cover border border-zinc-700" alt="Avatar">
                         <div>
-                            <div class="flex items-center space-x-2">
-                                <h4 class="font-bold text-sm text-white">${chat.name}</h4>
-                            </div>
+                            <h4 class="font-bold text-sm text-white">${chat.name}</h4>
                             <span class="text-[10px] text-emerald-400">${chat.address}</span>
                             <p class="text-xs text-zinc-400 mt-0.5 truncate max-w-[170px]">${chat.lastMessage}</p>
                         </div>
                     </div>
-                    <div class="flex flex-col items-end space-y-1">
-                        <span class="text-[10px] text-zinc-500">${chat.time}</span>
-                        ${chat.unread > 0 ? `<span class="bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">${chat.unread}</span>` : ''}
-                    </div>
+                    <span class="text-[10px] text-zinc-500">${chat.time}</span>
                 `;
                 chatListContainer.appendChild(item);
             });
         }
 
-        // Open Chat Room
         window.openChatRoom = function(chatId) {
             currentActiveChatId = chatId;
             let chatName = "Сосед";
             let chatAvatar = "https://placehold.co/100x100/10b981/ffffff?text=Н";
-            let chatStatus = `в сети · ${currentDistrict}`;
 
             if (chatId > 100) {
-                if (chatId === 101) { chatName = "📢 Официальные новости ЖК"; chatAvatar = "https://placehold.co/100x100/10b981/ffffff?text=НВ"; chatStatus = "канал микрорайона · 3.8к соседей"; }
-                if (chatId === 102) { chatName = "🐕 Потеряшки и Находки"; chatAvatar = "https://placehold.co/100x100/f59e0b/ffffff?text=ПЗ"; chatStatus = "помощь животным · 1.2к участников"; }
-                if (chatId === 103) { chatName = "🚗 Авточат и Выезд"; chatAvatar = "https://placehold.co/100x100/3b82f6/ffffff?text=ПР"; chatStatus = "дорожная обстановка · 2.4к участников"; }
+                if (chatId === 101) { chatName = "📢 Новости района"; chatAvatar = "https://placehold.co/100x100/10b981/ffffff?text=НВ"; }
+                if (chatId === 102) { chatName = "🐕 Потеряшки"; chatAvatar = "https://placehold.co/100x100/f59e0b/ffffff?text=ПЗ"; }
+                if (chatId === 103) { chatName = "🚗 Парковка"; chatAvatar = "https://placehold.co/100x100/3b82f6/ffffff?text=ПР"; }
             } else {
                 const chat = chats.find(c => c.id === chatId);
                 if (chat) {
                     chatName = chat.name;
                     chatAvatar = chat.avatar;
-                    chat.unread = 0;
-                    updateUnreadBadge();
-                    renderChats();
                 }
             }
 
             document.getElementById('room-name').innerText = chatName;
             document.getElementById('room-avatar').src = chatAvatar;
-            document.getElementById('room-status').innerText = chatStatus;
-
             renderMessages();
             chatRoomView.classList.remove('translate-x-full');
         };
@@ -549,6 +481,7 @@
                 const isMe = msg.sender === 'me';
                 bubble.className = `max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${isMe ? 'bg-emerald-600 text-white self-end rounded-br-none' : 'bg-zinc-800 text-zinc-200 self-start rounded-bl-none'}`;
                 bubble.innerHTML = `
+                    ${!isMe ? `<span class="block text-[10px] font-bold text-emerald-400 mb-0.5">${msg.name || 'Сосед'}</span>` : ''}
                     <p>${msg.text}</p>
                     <span class="block text-[9px] ${isMe ? 'text-emerald-200' : 'text-zinc-400'} text-right mt-1">${msg.time}</span>
                 `;
@@ -558,52 +491,73 @@
         }
 
         document.getElementById('send-msg-btn').onclick = sendMessage;
-        document.getElementById('message-input').onkeypress = (e) => {
-            if (e.key === 'Enter') sendMessage();
-        };
+        document.getElementById('message-input').onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
 
         function sendMessage() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
             if (!text || !currentActiveChatId) return;
 
-            if (!activeChatMessages[currentActiveChatId]) {
-                activeChatMessages[currentActiveChatId] = [];
-            }
+            if (!activeChatMessages[currentActiveChatId]) activeChatMessages[currentActiveChatId] = [];
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            activeChatMessages[currentActiveChatId].push({ sender: 'me', text, time: timeStr });
-            
-            if (currentActiveChatId < 100) {
-                const chat = chats.find(c => c.id === currentActiveChatId);
-                if (chat) {
-                    chat.lastMessage = text;
-                    chat.time = timeStr;
-                }
-                renderChats();
-            }
-
+            activeChatMessages[currentActiveChatId].push({ sender: 'me', name: 'Вы', text, time: timeStr });
             input.value = '';
             renderMessages();
-
-            if (currentActiveChatId < 100) {
-                setTimeout(() => {
-                    activeChatMessages[currentActiveChatId].push({ sender: 'them', text: "Понял вас, спасибо соседу! 👍", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-                    const chat = chats.find(c => c.id === currentActiveChatId);
-                    if (chat) chat.lastMessage = "Понял вас, спасибо соседу! 👍";
-                    renderMessages();
-                    renderChats();
-                }, 2000);
-            }
         }
 
-        // Comments Management
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFileType = file.type.startsWith('video') ? 'video' : 'image';
+                selectedFileUrl = URL.createObjectURL(file);
+                previewContainer.innerHTML = selectedFileType === 'video' 
+                    ? `<video src="${selectedFileUrl}" class="w-full h-full object-cover" autoplay muted loop></video>`
+                    : `<img src="${selectedFileUrl}" class="w-full h-full object-cover" alt="Preview">`;
+            }
+        };
+
+        document.getElementById('open-upload-btn').onclick = () => uploadModal.classList.remove('hidden');
+        document.getElementById('nav-create-quick').onclick = () => uploadModal.classList.remove('hidden');
+        document.getElementById('close-upload-btn').onclick = () => uploadModal.classList.add('hidden');
+
+        document.getElementById('submit-upload-btn').onclick = () => {
+            const caption = document.getElementById('upload-caption').value.trim() || "Новости нашего двора";
+            const category = document.getElementById('post-category').value;
+            
+            const newPost = {
+                id: Date.now(),
+                author: "Вы (Сосед)",
+                address: currentDistrict,
+                avatar: "https://placehold.co/100x100/10b981/ffffff?text=Я",
+                category: category,
+                caption: caption,
+                type: selectedFileType,
+                url: selectedFileUrl || 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80',
+                likes: 0,
+                isLiked: false,
+                coords: currentCoords,
+                comments: []
+            };
+
+            posts.unshift(newPost);
+            savePosts();
+            renderFeed();
+            uploadModal.classList.add('hidden');
+            document.getElementById('upload-caption').value = '';
+            fileInput.value = '';
+            previewContainer.innerHTML = `<span class="text-xs text-zinc-500">Предпросмотр медиафайла</span>`;
+            selectedFileUrl = null;
+            switchView('feed');
+            showToast("✅ Опубликовано", "Ваш пост успешно добавлен в ленту района!");
+        };
+
+        // Comments management
         window.openComments = function(postId) {
             currentCommentPostId = postId;
             const post = posts.find(p => p.id === postId);
             if (!post) return;
-
-            document.getElementById('comments-title').innerText = `Обсуждение соседей (${post.comments.length})`;
+            document.getElementById('comments-title').innerText = `Обсуждение (${post.comments.length})`;
             renderCommentsList(post);
             commentsModal.classList.remove('translate-y-full');
         };
@@ -611,7 +565,7 @@
         function renderCommentsList(post) {
             commentsList.innerHTML = '';
             if (post.comments.length === 0) {
-                commentsList.innerHTML = `<p class="text-center text-xs text-zinc-500 mt-10">Пока нет комментариев. Напишите первым!</p>`;
+                commentsList.innerHTML = `<p class="text-center text-xs text-zinc-500 mt-10">Комментариев пока нет. Напишите первым!</p>`;
                 return;
             }
             post.comments.forEach(c => {
@@ -638,143 +592,39 @@
 
             const post = posts.find(p => p.id === currentCommentPostId);
             if (post) {
-                post.comments.push({ author: "Вы (Сосед)", text, time: "Только что" });
+                post.comments.push({ author: "Вы", text, time: "Только что" });
                 input.value = '';
-                document.getElementById('comments-title').innerText = `Обсуждение соседей (${post.comments.length})`;
+                savePosts();
+                document.getElementById('comments-title').innerText = `Обсуждение (${post.comments.length})`;
                 renderCommentsList(post);
                 renderFeed();
             }
         };
 
-        document.getElementById('close-comments-btn').onclick = () => {
-            commentsModal.classList.add('translate-y-full');
-        };
+        document.getElementById('close-comments-btn').onclick = () => commentsModal.classList.add('translate-y-full');
 
-        // File Upload Handling
-        fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                selectedFileType = file.type.startsWith('video') ? 'video' : 'image';
-                selectedFileUrl = URL.createObjectURL(file);
-                
-                previewContainer.innerHTML = '';
-                if (selectedFileType === 'video') {
-                    previewContainer.innerHTML = `<video src="${selectedFileUrl}" class="w-full h-full object-cover" autoplay muted loop></video>`;
-                } else {
-                    previewContainer.innerHTML = `<img src="${selectedFileUrl}" class="w-full h-full object-cover" alt="Preview">`;
-                }
-            }
-        };
-
-        document.getElementById('open-upload-btn').onclick = () => uploadModal.classList.remove('hidden');
-        document.getElementById('nav-create-quick').onclick = () => uploadModal.classList.remove('hidden');
-        document.getElementById('close-upload-btn').onclick = () => uploadModal.classList.add('hidden');
-
-        document.getElementById('submit-upload-btn').onclick = () => {
-            const caption = document.getElementById('upload-caption').value.trim() || "Срочные новости нашего двора!";
-            const category = document.getElementById('post-category').value;
-            
-            const newPost = {
-                id: Date.now(),
-                author: "Вы (Сосед)",
-                address: `${currentDistrict}, ул. Еременко`,
-                avatar: "https://placehold.co/100x100/10b981/ffffff?text=В",
-                category: category,
-                caption: caption,
-                type: selectedFileType,
-                url: selectedFileUrl || (selectedFileType === 'video' ? 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1186-large.mp4' : 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&auto=format&fit=crop&q=80'),
-                likes: 1,
-                isLiked: true,
-                coords: currentCoords,
-                comments: []
-            };
-
-            posts.unshift(newPost);
-            renderFeed();
-            uploadModal.classList.add('hidden');
-            document.getElementById('upload-caption').value = '';
-            fileInput.value = '';
-            previewContainer.innerHTML = `<span class="text-xs text-zinc-500">Предпросмотр фото/видео</span>`;
-            selectedFileUrl = null;
-            
-            switchView('feed');
-        };
-
-        // District & Map Modal Selection
-        window.openDistrictSelector = function() {
-            districtModal.classList.remove('hidden');
-        };
-
-        window.closeDistrictSelector = function() {
-            districtModal.classList.add('hidden');
-        };
-
+        // District & Map
+        window.openDistrictSelector = function() { districtModal.classList.remove('hidden'); };
+        window.closeDistrictSelector = function() { districtModal.classList.add('hidden'); };
         window.selectDistrictPreset = function(name, lat, lon) {
             currentDistrict = name;
             currentCoords = [lat, lon];
             document.getElementById('current-district-label').innerText = name;
-            document.getElementById('online-neighbors-count').innerText = `онлайн в ${name}: 245 соседей`;
             closeDistrictSelector();
             renderFeed();
-            if (leafletMap) {
-                leafletMap.setView([lat, lon], 14);
-            }
         };
 
-        window.useGpsLocation = function() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    currentCoords = [position.coords.latitude, position.coords.longitude];
-                    currentDistrict = "Ваша геопозиция (Ростов)";
-                    document.getElementById('current-district-label').innerText = currentDistrict;
-                    closeDistrictSelector();
-                    renderFeed();
-                    if (leafletMap) {
-                        leafletMap.setView(currentCoords, 15);
-                    }
-                }, () => {
-                    alert("Не удалось получить геопозицию. Выбран ЖК Суворовский по умолчанию.");
-                });
-            } else {
-                alert("Геолокация не поддерживается вашим браузером.");
-            }
-        };
-
-        // Leaflet Map Integration
         window.openMapTab = function() {
             mapView.classList.remove('translate-x-full');
             chatView.classList.add('translate-x-full');
             chatRoomView.classList.add('translate-x-full');
-
             setTimeout(() => {
                 if (!mapInitialized) {
                     leafletMap = L.map('leaflet-map').setView(currentCoords, 14);
-                    
-                    // Dark theme tile layer for map
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{z}.png', {
-                        maxZoom: 19,
-                        attribution: '&copy; OpenStreetMap contributors & CARTO'
-                    }).addTo(leafletMap);
-
-                    // Add markers for current posts
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{z}.png', { maxZoom: 19 }).addTo(leafletMap);
                     posts.forEach(p => {
-                        if (p.coords) {
-                            const marker = L.marker(p.coords).addTo(leafletMap);
-                            marker.bindPopup(`<b>${p.category}</b><br>${p.caption.substring(0, 50)}...<br><span style="color: #10b981;">${p.address}</span>`);
-                        }
+                        if (p.coords) L.marker(p.coords).addTo(leafletMap).bindPopup(`<b>${p.category}</b><br>${p.caption}`);
                     });
-
-                    // Allow user to click map to set location
-                    leafletMap.on('click', function(e) {
-                        currentCoords = [e.latlng.lat, e.latlng.lng];
-                        currentDistrict = `Точка (${e.latlng.lat.toFixed(2)}, ${e.latlng.lng.toFixed(2)})`;
-                        document.getElementById('current-district-label').innerText = currentDistrict;
-                        L.popup()
-                            .setLatLng(e.latlng)
-                            .setContent("📍 Ваша новая позиция в Ростове установлена!")
-                            .openOn(leafletMap);
-                    });
-
                     mapInitialized = true;
                 } else {
                     leafletMap.invalidateSize();
@@ -783,10 +633,8 @@
             }, 300);
         };
 
-        // Navigation Switching
         const navHome = document.getElementById('nav-home');
         const navChat = document.getElementById('nav-chat');
-        const navProfile = document.getElementById('nav-profile');
 
         function switchView(view) {
             if (view === 'feed') {
@@ -806,44 +654,13 @@
 
         navHome.onclick = () => switchView('feed');
         navChat.onclick = () => switchView('chat');
-        navProfile.onclick = () => alert("Ваш профиль соседа: верифицирован в ЖК Суворовский, ул. академика П.А. Левицкого.");
-
-        document.getElementById('close-chat-btn').onclick = () => {
-            chatView.classList.add('translate-x-full');
-            navChat.classList.remove('text-white');
-            navHome.classList.add('text-white');
-        };
-
-        document.getElementById('close-room-btn').onclick = () => {
-            chatRoomView.classList.add('translate-x-full');
-        };
-
-        window.switchDistrictTab = function(tab) {
-            if (tab === 'following') {
-                document.getElementById('tab-following').className = 'text-white border-b-2 border-emerald-500 pb-0.5 font-bold';
-                document.getElementById('tab-feed').className = 'hover:text-white transition font-normal';
-                alert("Показаны только избранные дома и соседи вашего квартала в Ростове.");
-            } else {
-                document.getElementById('tab-feed').className = 'text-white border-b-2 border-emerald-500 pb-0.5 font-bold';
-                document.getElementById('tab-following').className = 'hover:text-white transition font-normal';
-            }
-        }
-
-        function updateUnreadBadge() {
-            const totalUnread = chats.reduce((sum, c) => sum + c.unread, 0);
-            const badge = document.getElementById('unread-badge');
-            if (totalUnread > 0) {
-                badge.innerText = totalUnread;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
+        document.getElementById('close-chat-btn').onclick = () => { chatView.classList.add('translate-x-full'); navChat.classList.remove('text-white'); navHome.classList.add('text-white'); };
+        document.getElementById('close-room-btn').onclick = () => chatRoomView.classList.add('translate-x-full');
+        document.getElementById('nav-profile').onclick = () => showToast("Профиль соседа", "Вы авторизованы как житель района.");
 
         window.onload = function() {
             renderFeed();
             renderChats();
-            updateUnreadBadge();
         };
     </script>
 </body>
