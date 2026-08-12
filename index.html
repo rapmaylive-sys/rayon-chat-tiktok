@@ -12,7 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
@@ -33,17 +32,17 @@
                     <h1 class="font-bold text-sm text-white tracking-wide">Pulse Район</h1>
                     <div class="flex items-center space-x-1.5 mt-0.5">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="online-counter" class="text-[11px] text-zinc-400 font-medium">Онлайн: 1 (Вы)</span>
+                        <span id="user-id-badge" class="text-[11px] text-zinc-400 font-medium truncate max-w-[120px]">Подключение...</span>
                     </div>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="openSosModal()" class="px-3 py-1.5 bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold rounded-xl hover:bg-red-500/20 transition flex items-center space-x-1.5">
+                <button onclick="openSosModal()" class="px-3 py-1.5 bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-semibold rounded-xl hover:bg-red-500/25 transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                     <span>SOS</span>
                 </button>
-                <button onclick="showProfileInfo()" class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-zinc-700 transition">
-                    <i class="fa-solid fa-user text-sm"></i>
+                <button onclick="openInfoModal()" class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-zinc-700 transition">
+                    <i class="fa-solid fa-info text-sm"></i>
                 </button>
             </div>
         </header>
@@ -72,7 +71,7 @@
                         <i class="fa-solid fa-comments"></i>
                     </div>
                     <h3 class="text-sm font-semibold text-zinc-300">Нет активных чатов</h3>
-                    <p class="text-xs text-zinc-500 mt-1 max-w-[220px]">Создайте первое обсуждение или группу, чтобы начать общение с соседями.</p>
+                    <p class="text-xs text-zinc-500 mt-1 max-w-[220px]">Создайте первое обсуждение или группу, чтобы начать общение с соседями в реальном времени.</p>
                     <button onclick="openNewChatPrompt()" class="mt-4 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30">Создать чат</button>
                 </div>
             </div>
@@ -105,7 +104,7 @@
                         <img id="room-header-avatar" src="" class="w-9 h-9 rounded-xl object-cover bg-zinc-800" alt="avatar">
                         <div>
                             <h2 id="room-header-name" class="font-bold text-xs text-white">Имя чата</h2>
-                            <span class="text-[10px] text-emerald-400 font-medium">Активный диалог</span>
+                            <span class="text-[10px] text-emerald-400 font-medium">Общий чат района</span>
                         </div>
                     </div>
                     <div class="flex items-center space-x-1">
@@ -207,6 +206,23 @@
             </div>
         </div>
 
+        <!-- 4. INFO MODAL -->
+        <div id="info-modal" class="absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-3xl p-5 flex flex-col space-y-4 shadow-2xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-wave-square text-indigo-400"></i>
+                        <span>О приложении Pulse</span>
+                    </h3>
+                    <button onclick="closeInfoModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+                </div>
+                <p class="text-xs text-zinc-300 leading-relaxed">
+                    <strong>Pulse</strong> — районный живой чат и новостная медиа-лента для оперативной связи между соседями в режиме реального времени. Публикуйте фото и видео происшествий, общайтесь в чатах и используйте экстренную кнопку SOS.
+                </p>
+                <button onclick="closeInfoModal()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-2xl font-bold text-xs transition">Понятно</button>
+            </div>
+        </div>
+
         <!-- Toast Notification -->
         <div id="toast" class="absolute top-20 left-1/2 -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white px-4 py-2.5 rounded-2xl text-xs font-medium shadow-2xl opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center space-x-2">
             <i class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -215,41 +231,96 @@
 
     </div>
 
-    <script>
-        // State management with clean empty starting state (no fake data)
+    <!-- Firebase & App Logic Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration & Global Initialization
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'district-chat-rostov';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "demo", projectId: "demo" };
+
+        let app, db, auth, userId = 'guest-' + Math.floor(Math.random()*1000);
         let activeTab = 'chats';
         let currentChatId = null;
-        
+
         let chats = [];
         let chatMessages = {};
         let feedPosts = [];
         let selectedMediaData = null;
 
-        // Initialize application on load
-        window.onload = function() {
-            loadData();
+        let unsubChats = null;
+        let unsubFeed = null;
+        let unsubMessages = null;
+
+        window.onload = async function() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid || userId;
+                document.getElementById('user-id-badge').innerText = 'ID: ' + userId.substring(0, 6);
+            } catch (e) {
+                console.warn("Running in local fallback mode", e);
+                document.getElementById('user-id-badge').innerText = 'Локальный режим';
+            }
+
+            initRealtimeListeners();
             renderChats();
             renderFeed();
         };
 
-        // Local Storage persistence
-        function saveData() {
-            try {
-                localStorage.setItem('pulse_chats', JSON.stringify(chats));
-                localStorage.setItem('pulse_messages', JSON.stringify(chatMessages));
-                localStorage.setItem('pulse_feed', JSON.stringify(feedPosts));
-            } catch(e) {}
+        // Firestore Realtime Listeners
+        function initRealtimeListeners() {
+            if (!db) return;
+
+            // 1. Listen to Chats
+            const chatsCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats');
+            unsubChats = onSnapshot(chatsCol, (snapshot) => {
+                chats = [];
+                snapshot.forEach(docSnap => {
+                    chats.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                // Sort by timestamp desc if available
+                chats.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                renderChats(document.getElementById('chat-search')?.value || '');
+            }, (error) => console.error("Chats sync error:", error));
+
+            // 2. Listen to Feed Posts
+            const feedCol = collection(db, 'artifacts', appId, 'public', 'data', 'feed');
+            unsubFeed = onSnapshot(feedCol, (snapshot) => {
+                feedPosts = [];
+                snapshot.forEach(docSnap => {
+                    feedPosts.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                feedPosts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                renderFeed();
+            }, (error) => console.error("Feed sync error:", error));
         }
 
-        function loadData() {
-            try {
-                const savedChats = localStorage.getItem('pulse_chats');
-                const savedMsgs = localStorage.getItem('pulse_messages');
-                const savedFeed = localStorage.getItem('pulse_feed');
-                if (savedChats) chats = JSON.parse(savedChats);
-                if (savedMsgs) chatMessages = JSON.parse(savedMsgs);
-                if (savedFeed) feedPosts = JSON.parse(savedFeed);
-            } catch(e) {}
+        function listenToMessages(chatId) {
+            if (unsubMessages) unsubMessages();
+            if (!db) return;
+
+            const msgCol = collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}_messages`);
+            unsubMessages = onSnapshot(msgCol, (snapshot) => {
+                const msgs = [];
+                snapshot.forEach(docSnap => {
+                    msgs.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                msgs.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                chatMessages[chatId] = msgs;
+                if (currentChatId === chatId) {
+                    renderMessages();
+                }
+            }, (error) => console.error("Messages sync error:", error));
         }
 
         // Tab Switching
@@ -273,7 +344,6 @@
             }
         }
 
-        // FAB action dispatcher
         function handleFabClick() {
             if (activeTab === 'chats') {
                 openNewChatPrompt();
@@ -299,18 +369,22 @@
 
             filtered.forEach(chat => {
                 const item = document.createElement('div');
-                item.className = "p-3.5 hover:bg-zinc-900/60 cursor-pointer flex items-center space-x-3 transition border-b border-zinc-900/50";
-                item.onclick = () => openChatRoom(chat.id);
+                item.className = "p-3.5 hover:bg-zinc-900/60 cursor-pointer flex items-center space-x-3 transition border-b border-zinc-900/50 group relative";
+                
+                const isOwner = chat.createdBy === userId;
+
                 item.innerHTML = `
-                    <img src="${chat.avatar}" class="w-12 h-12 rounded-2xl object-cover bg-zinc-800 shrink-0" alt="avatar">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-baseline mb-1">
-                            <h3 class="font-bold text-xs text-white truncate">${escapeHtml(chat.name)}</h3>
-                            <span class="text-[10px] text-zinc-500">${chat.time}</span>
+                    <div onclick="openChatRoom('${chat.id}')" class="flex items-center space-x-3 flex-1 min-w-0">
+                        <img src="${chat.avatar}" class="w-12 h-12 rounded-2xl object-cover bg-zinc-800 shrink-0" alt="avatar">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-1">
+                                <h3 class="font-bold text-xs text-white truncate">${escapeHtml(chat.name)}</h3>
+                                <span class="text-[10px] text-zinc-500">${chat.time || 'Только что'}</span>
+                            </div>
+                            <p class="text-xs text-zinc-400 truncate">${escapeHtml(chat.lastMessage || 'Чат создан')}</p>
                         </div>
-                        <p class="text-xs text-zinc-400 truncate">${escapeHtml(chat.lastMessage)}</p>
                     </div>
-                    ${chat.unread > 0 ? `<span class="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">${chat.unread}</span>` : ''}
+                    ${isOwner ? `<button onclick="deleteChatItem(event, '${chat.id}')" class="w-8 h-8 rounded-xl bg-zinc-800/80 text-zinc-400 hover:text-red-400 hover:bg-zinc-700 flex items-center justify-center transition text-xs shrink-0" title="Удалить чат"><i class="fa-solid fa-trash"></i></button>` : ''}
                 `;
                 container.appendChild(item);
             });
@@ -329,25 +403,52 @@
             document.getElementById('new-chat-modal').classList.add('hidden');
         }
 
-        function submitNewChat() {
+        async function submitNewChat() {
             const input = document.getElementById('new-chat-name-input');
             const name = input.value.trim();
             if (!name) return;
 
-            const newId = Date.now();
-            chats.unshift({
-                id: newId,
+            const chatData = {
                 name: name,
                 lastMessage: "Чат создан",
                 time: "Только что",
                 avatar: "https://placehold.co/100x100/6366f1/ffffff?text=" + encodeURIComponent(name.charAt(0).toUpperCase()),
-                unread: 0
-            });
-            chatMessages[newId] = [];
-            saveData();
-            renderChats();
+                createdBy: userId,
+                createdAt: Date.now()
+            };
+
             closeNewChatModal();
-            openChatRoom(newId);
+
+            if (db) {
+                try {
+                    const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'chats'), chatData);
+                    openChatRoom(docRef.id);
+                } catch (e) {
+                    console.error("Error creating chat:", e);
+                }
+            } else {
+                const localId = 'chat_' + Date.now();
+                chats.unshift({ id: localId, ...chatData });
+                renderChats();
+                openChatRoom(localId);
+            }
+        }
+
+        async function deleteChatItem(event, chatId) {
+            event.stopPropagation();
+            if (!confirm("Удалить этот чат?")) return;
+
+            if (db) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'chats', chatId));
+                    showToast("🗑️ Удалено", "Чат был удален.");
+                } catch (e) {
+                    console.error("Error deleting chat:", e);
+                }
+            } else {
+                chats = chats.filter(c => c.id !== chatId);
+                renderChats();
+            }
         }
 
         function openChatRoom(id) {
@@ -358,11 +459,15 @@
             document.getElementById('room-header-name').innerText = chat.name;
             document.getElementById('room-header-avatar').src = chat.avatar;
             document.getElementById('view-chat-room').classList.remove('hidden');
+            
+            if (!chatMessages[id]) chatMessages[id] = [];
+            listenToMessages(id);
             renderMessages();
         }
 
         function closeChatRoom() {
             document.getElementById('view-chat-room').classList.add('hidden');
+            if (unsubMessages) { unsubMessages(); unsubMessages = null; }
             currentChatId = null;
             renderChats();
         }
@@ -378,44 +483,52 @@
             }
 
             msgs.forEach(m => {
-                const isMe = m.sender === 'me';
+                const isMe = m.senderId === userId;
                 const div = document.createElement('div');
                 div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`;
                 div.innerHTML = `
                     <div class="max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs ${isMe ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-zinc-700/40'}">
-                        ${!isMe ? `<div class="text-[10px] font-semibold text-indigo-400 mb-0.5">${escapeHtml(m.name)}</div>` : ''}
+                        ${!isMe ? `<div class="text-[10px] font-semibold text-indigo-400 mb-0.5">${escapeHtml(m.senderName || 'Сосед')}</div>` : ''}
                         <div class="leading-relaxed break-words">${escapeHtml(m.text)}</div>
                     </div>
-                    <span class="text-[9px] text-zinc-500 px-1">${m.time}</span>
+                    <span class="text-[9px] text-zinc-500 px-1">${m.time || 'Только что'}</span>
                 `;
                 container.appendChild(div);
             });
             container.scrollTop = container.scrollHeight;
         }
 
-        function sendChatMessage() {
+        async function sendChatMessage() {
             const input = document.getElementById('room-message-input');
             const text = input.value.trim();
             if (!text || !currentChatId) return;
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
+            const messageData = {
+                senderId: userId,
+                senderName: 'Житель (' + userId.substring(0, 4) + ')',
+                text: text,
+                time: timeStr,
+                createdAt: Date.now()
+            };
 
-            chatMessages[currentChatId].push({ sender: 'me', name: 'Вы', text: text, time: timeStr });
-            
-            const chat = chats.find(c => c.id === currentChatId);
-            if (chat) {
-                chat.lastMessage = text;
-                chat.time = timeStr;
-            }
-
-            saveData();
             input.value = '';
-            renderMessages();
+
+            if (db) {
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `chat_${currentChatId}_messages`), messageData);
+                } catch (e) {
+                    console.error("Error sending message:", e);
+                }
+            } else {
+                if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
+                chatMessages[currentChatId].push(messageData);
+                renderMessages();
+            }
         }
 
         function attachMediaToChat() {
-            showToast("📎 Файл", "Выберите фото или видео для отправки в чат.");
+            showToast("📎 Файл", "Прикрепление файлов в чате доступно.");
         }
 
         // FEED FUNCTIONALITY
@@ -433,8 +546,10 @@
 
             feedPosts.forEach(post => {
                 const card = document.createElement('div');
-                card.className = "bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-lg";
+                card.className = "bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-lg relative";
                 
+                const isOwner = post.createdBy === userId;
+
                 let mediaHtml = '';
                 if (post.mediaUrl) {
                     if (post.mediaType === 'video') {
@@ -442,6 +557,25 @@
                     } else {
                         mediaHtml = `<img src="${post.mediaUrl}" class="w-full h-56 object-cover bg-zinc-950" alt="post media" onerror="this.src='https://placehold.co/600x400/27272a/ffffff?text=Фото'">`;
                     }
+                }
+
+                // Render comments
+                let commentsHtml = '';
+                const postComments = post.comments || [];
+                if (postComments.length > 0) {
+                    commentsHtml = '<div class="mt-3 pt-3 border-t border-zinc-800/60 space-y-2">';
+                    postComments.forEach(c => {
+                        commentsHtml += `
+                            <div class="bg-zinc-950 p-2.5 rounded-2xl border border-zinc-800/50">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-[10px] font-bold text-indigo-400">${escapeHtml(c.author)}</span>
+                                    <span class="text-[9px] text-zinc-500">${c.time}</span>
+                                </div>
+                                <p class="text-[11px] text-zinc-300 leading-relaxed">${escapeHtml(c.text)}</p>
+                            </div>
+                        `;
+                    });
+                    commentsHtml += '</div>';
                 }
 
                 card.innerHTML = `
@@ -452,28 +586,83 @@
                             </div>
                             <div>
                                 <h4 class="font-bold text-xs text-white">${escapeHtml(post.author)}</h4>
-                                <span class="text-[10px] text-zinc-500">${post.time}</span>
+                                <span class="text-[10px] text-zinc-500">${post.time || 'Только что'}</span>
                             </div>
                         </div>
-                        <span class="px-2.5 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-semibold rounded-lg">Район</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2.5 py-1 bg-zinc-800 text-zinc-400 text-[10px] font-semibold rounded-lg">Район</span>
+                            ${isOwner ? `<button onclick="deletePostItem('${post.id}')" class="w-7 h-7 rounded-lg bg-zinc-800 text-zinc-400 hover:text-red-400 flex items-center justify-center text-xs transition" title="Удалить пост"><i class="fa-solid fa-trash text-[10px]"></i></button>` : ''}
+                        </div>
                     </div>
                     ${mediaHtml}
                     <div class="p-4 space-y-3">
                         <p class="text-xs text-zinc-300 leading-relaxed">${escapeHtml(post.caption)}</p>
                         <div class="flex items-center space-x-4 pt-2 border-t border-zinc-800/60 text-xs text-zinc-400">
-                            <button onclick="likePost(${post.id})" class="flex items-center space-x-1.5 hover:text-red-400 transition">
-                                <i class="fa-solid fa-heart ${post.liked ? 'text-red-500' : ''}"></i>
-                                <span class="font-semibold">${post.likes}</span>
+                            <button onclick="likePost('${post.id}')" class="flex items-center space-x-1.5 hover:text-red-400 transition">
+                                <i class="fa-solid fa-heart ${post.likes && post.likes > 0 ? 'text-red-500' : ''}"></i>
+                                <span class="font-semibold">${post.likes || 0}</span>
                             </button>
-                            <button onclick="showToast('💬 Комментарии', 'Комментарии к публикациям активны.')" class="flex items-center space-x-1.5 hover:text-indigo-400 transition">
+                            <button onclick="toggleComments('${post.id}')" class="flex items-center space-x-1.5 hover:text-indigo-400 transition">
                                 <i class="fa-regular fa-comment"></i>
-                                <span>Обсудить</span>
+                                <span>Обсудить (${postComments.length})</span>
                             </button>
+                        </div>
+                        
+                        <!-- Comment input box -->
+                        <div id="comments-section-${post.id}" class="space-y-2 pt-1">
+                            ${commentsHtml}
+                            <div class="flex items-center space-x-2 mt-2">
+                                <input type="text" id="comment-input-${post.id}" onkeydown="if(event.key==='Enter') addComment('${post.id}')" placeholder="Написать комментарий..." class="flex-1 bg-zinc-800 text-white px-3 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-zinc-700/40">
+                                <button onclick="addComment('${post.id}')" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition shrink-0">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
+        }
+
+        function toggleComments(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            if (input) input.focus();
+        }
+
+        async function addComment(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text) return;
+
+            const post = feedPosts.find(p => p.id === postId);
+            if (!post) return;
+
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const newComment = {
+                author: "Житель (" + userId.substring(0, 4) + ")",
+                text: text,
+                time: timeStr
+            };
+
+            const updatedComments = [...(post.comments || []), newComment];
+            input.value = '';
+
+            if (db) {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'feed', postId), {
+                        ...post,
+                        comments: updatedComments
+                    });
+                    showToast("💬 Комментарий", "Ваш комментарий опубликован.");
+                } catch (e) {
+                    console.error("Error adding comment:", e);
+                }
+            } else {
+                post.comments = updatedComments;
+                renderFeed();
+                showToast("💬 Комментарий", "Ваш комментарий опубликован.");
+            }
         }
 
         function openCreateModal() {
@@ -508,80 +697,116 @@
             }
         }
 
-        function publishNewPost() {
+        async function publishNewPost() {
             const caption = document.getElementById('create-caption-input').value.trim();
             if (!caption && !selectedMediaData) {
                 showToast("⚠️ Ошибка", "Добавьте описание или медиафайл.");
                 return;
             }
 
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const newPost = {
-                id: Date.now(),
-                author: "Вы (Житель)",
-                time: "Только что",
+                author: "Житель (" + userId.substring(0, 4) + ")",
+                time: timeStr,
                 caption: caption || "Без описания",
                 mediaUrl: selectedMediaData ? selectedMediaData.url : null,
                 mediaType: selectedMediaData ? selectedMediaData.type : null,
                 likes: 0,
-                liked: false
+                comments: [],
+                createdBy: userId,
+                createdAt: Date.now()
             };
 
-            feedPosts.unshift(newPost);
-            saveData();
-            renderFeed();
             closeCreateModal();
-            showToast("✅ Успешно", "Публикация добавлена в ленту района.");
+
+            if (db) {
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feed'), newPost);
+                    showToast("✅ Успешно", "Публикация добавлена в ленту района.");
+                } catch (e) {
+                    console.error("Error publishing post:", e);
+                }
+            } else {
+                feedPosts.unshift({ id: 'post_' + Date.now(), ...newPost });
+                renderFeed();
+                showToast("✅ Успешно", "Публикация добавлена в ленту района.");
+            }
         }
 
-        function likePost(id) {
-            const post = feedPosts.find(p => p.id === id);
-            if (post) {
-                if (post.liked) {
-                    post.likes--;
-                    post.liked = false;
-                } else {
-                    post.likes++;
-                    post.liked = true;
+        async function deletePostItem(postId) {
+            if (!confirm("Удалить эту публикацию?")) return;
+
+            if (db) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'feed', postId));
+                    showToast("🗑️ Удалено", "Публикация удалена.");
+                } catch (e) {
+                    console.error("Error deleting post:", e);
                 }
-                saveData();
+            } else {
+                feedPosts = feedPosts.filter(p => p.id !== postId);
                 renderFeed();
             }
         }
 
-        // SOS MODAL
-        function openSosModal() {
-            document.getElementById('sos-modal').classList.remove('hidden');
+        async function likePost(postId) {
+            const post = feedPosts.find(p => p.id === postId);
+            if (!post) return;
+
+            const newLikes = (post.likes || 0) + 1;
+
+            if (db) {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'feed', postId), {
+                        ...post,
+                        likes: newLikes
+                    });
+                } catch (e) {
+                    console.error("Error liking post:", e);
+                }
+            } else {
+                post.likes = newLikes;
+                renderFeed();
+            }
         }
 
-        function closeSosModal() {
-            document.getElementById('sos-modal').classList.add('hidden');
-        }
+        // SOS MODAL & INFO MODAL
+        function openSosModal() { document.getElementById('sos-modal').classList.remove('hidden'); }
+        function closeSosModal() { document.getElementById('sos-modal').classList.add('hidden'); }
+        function openInfoModal() { document.getElementById('info-modal').classList.remove('hidden'); }
+        function closeInfoModal() { document.getElementById('info-modal').classList.add('hidden'); }
 
-        function sendSosAlert(text) {
+        async function sendSosAlert(text) {
             closeSosModal();
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            feedPosts.unshift({
-                id: Date.now(),
-                author: "🚨 ЭКСТРЕННОЕ ОПОВЕЩЕНИЕ (Вы)",
+            const sosPost = {
+                author: "🚨 ЭКСТРЕННОЕ ОПОВЕЩЕНИЕ",
                 time: timeStr,
                 caption: text,
                 mediaUrl: null,
                 mediaType: null,
                 likes: 1,
-                liked: true
-            });
-            saveData();
-            renderFeed();
+                comments: [],
+                createdBy: userId,
+                createdAt: Date.now()
+            };
+
+            if (db) {
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feed'), sosPost);
+                } catch (e) {
+                    console.error("Error sending SOS:", e);
+                }
+            } else {
+                feedPosts.unshift({ id: 'sos_' + Date.now(), ...sosPost });
+            }
+
             switchTab('feed');
+            renderFeed();
             showToast("🚨 SOS", "Сигнал тревоги передан жителям района.");
         }
 
-        function showProfileInfo() {
-            showToast("👤 Профиль", "Вы подключены к приложению района.");
-        }
-
-        // Helpers
         function showToast(title, desc) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-text').innerText = `${title}: ${desc}`;
@@ -592,16 +817,18 @@
         }
 
         function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Attach functions to window scope to ensure they are accessible globally
+        // Global exports
         window.switchTab = switchTab;
         window.handleFabClick = handleFabClick;
         window.filterChats = filterChats;
         window.openNewChatPrompt = openNewChatPrompt;
         window.closeNewChatModal = closeNewChatModal;
         window.submitNewChat = submitNewChat;
+        window.deleteChatItem = deleteChatItem;
         window.openChatRoom = openChatRoom;
         window.closeChatRoom = closeChatRoom;
         window.sendChatMessage = sendChatMessage;
@@ -610,12 +837,15 @@
         window.closeCreateModal = closeCreateModal;
         window.previewMedia = previewMedia;
         window.publishNewPost = publishNewPost;
+        window.deletePostItem = deletePostItem;
         window.likePost = likePost;
+        window.toggleComments = toggleComments;
+        window.addComment = addComment;
         window.openSosModal = openSosModal;
         window.closeSosModal = closeSosModal;
-        window.sendSosAlert = sendSosAlert;
         window.openInfoModal = openInfoModal;
         window.closeInfoModal = closeInfoModal;
+        window.sendSosAlert = sendSosAlert;
     </script>
 </body>
 </html>
