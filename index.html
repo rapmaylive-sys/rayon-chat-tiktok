@@ -418,8 +418,8 @@
                         }
                     })
                     .subscribe((status, err) => {
-                        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || (err && err.message && err.message.includes('WebSocket'))) {
-                            activateFallbackMode("Автономный режим");
+                        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || (err && err.message && (err.message.includes('WebSocket') || err.message.includes('SecurityError')))) {
+                            activateFallbackMode("Автономный режим (Песочница)");
                         }
                     });
             } catch(e) {
