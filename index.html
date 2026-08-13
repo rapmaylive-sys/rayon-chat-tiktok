@@ -1,227 +1,99 @@
 <!DOCTYPE html>
-<html lang="ru" class="h-full">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pulse — Районный Живой Чат (Firebase)</title>
-    <!-- Tailwind CSS -->
-    <script src="https://tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cloudflare.com">
-    <!-- Google Fonts Inter -->
-    <link href="https://googleapis.com" rel="stylesheet">
+    <title>FamilyConnect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
-        #chats-list-container { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-        input { -webkit-appearance: none; }
+        .fade-out { transition: opacity 1.5s ease-out; opacity: 0 !important; }
+        .message-bubble { transition: all 0.3s ease; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        #messages::-webkit-scrollbar { width: 6px; }
+        #messages::-webkit-scrollbar-thumb { background: #17212b; border-radius: 10px; }
     </style>
 </head>
-<body class="h-full overflow-hidden flex justify-center items-center bg-zinc-950">
+<body class="bg-gray-950 text-white h-screen flex items-center justify-center m-0 overflow-hidden font-sans">
 
-    <!-- ЦЕНТРАЛЬНЫЙ СМАРТФОН-ФРЕЙМ ЧАТА -->
-    <div class="w-full h-full max-w-md bg-zinc-900 shadow-2xl flex flex-col relative overflow-hidden border border-zinc-800 sm:rounded-3xl">
-
-        <!-- TOP APP HEADER -->
-        <header class="h-16 px-4 bg-zinc-900/85 backdrop-blur-md border-b border-zinc-800 flex items-center justify-between z-20 shrink-0">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-500/30">
-                    <i class="fa-solid fa-bolt"></i>
-                </div>
-                <div>
-                    <h1 class="font-bold text-sm text-white tracking-wide">Pulse Район</h1>
-                    <div class="flex items-center space-x-2 mt-0.5">
-                        <div class="flex items-center space-x-1">
-                            <span id="connection-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                            <span id="user-id-badge" class="text-[11px] text-zinc-400 font-medium truncate max-w-[90px]">Подключение...</span>
-                        </div>
-                        <span class="text-zinc-600">|</span>
-                        <div class="flex items-center space-x-1 text-[11px] text-emerald-400 font-medium">
-                            <span id="cloud-status-text">Firebase</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="alert('Сигнал SOS отправлен соседям!')" class="px-3 py-1.5 bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-semibold rounded-xl hover:bg-red-500/25 transition flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    <span>SOS</span>
-                </button>
-                <button onclick="window.switchView('rules')" class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-zinc-700 transition">
-                    <i class="fa-solid fa-book-open text-sm"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- MAIN CONTENT AREA -->
-        <main id="main-content" class="flex-1 overflow-y-auto relative flex flex-col bg-zinc-950">
-
-            <!-- VIEW 1: CHATS (MESSAGES) -->
-            <div id="view-chats" class="flex-1 flex flex-col h-full overflow-hidden">
-                <div class="p-3 border-b border-zinc-800 bg-zinc-900/50">
-                    <div class="relative">
-                        <i class="fa-solid fa-search absolute left-3.5 top-3 text-zinc-500 text-xs"></i>
-                        <input type="text" id="chat-search" placeholder="Поиск по сообщениям..." class="w-full bg-zinc-800 text-white pl-9 pr-4 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 border border-zinc-700/40">
-                    </div>
-                </div>
-
-                <!-- Контейнер для вывода сообщений -->
-                <div id="chats-list-container" class="flex-1 overflow-y-auto p-4 space-y-3">
-                    <!-- Заглушка пустого экрана -->
-                    <div id="chats-empty-state" class="flex flex-col items-center justify-center p-6 text-center h-full">
-                        <div class="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 mb-3 text-xl">
-                            <i class="fa-solid fa-comments"></i>
-                        </div>
-                        <h3 class="text-sm font-semibold text-zinc-300">В чате пока пусто</h3>
-                        <p class="text-xs text-zinc-500 mt-1 max-w-[220px]">Напишите первое сообщение ниже, чтобы начать общение с соседями.</p>
-                    </div>
-                </div>
-
-                <!-- ПАНЕЛЬ ОТПРАВКИ СООБЩЕНИЯ -->
-                <div class="p-3 bg-zinc-900/90 border-t border-zinc-800 flex items-center space-x-2 shrink-0">
-                    <input type="text" id="message-input" placeholder="Напишите сообщение соседям..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 border border-zinc-700/40">
-                    <button id="send-btn" class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition shadow-lg shadow-emerald-600/20">
-                        <i class="fa-solid fa-paper-plane text-xs"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- VIEW 2: RULES -->
-            <div id="view-rules" class="hidden flex-1 flex flex-col h-full overflow-y-auto p-4 space-y-4">
-                <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-4 shadow-lg">
-                    <div class="flex items-center space-x-3 mb-3">
-                        <div class="w-10 h-10 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-lg font-bold">
-                            <i class="fa-solid fa-book-open"></i>
-                        </div>
-                        <div>
-                            <h2 class="font-bold text-sm text-white">Правила района Pulse</h2>
-                            <span class="text-[11px] text-zinc-400">Безопасность и уважение соседей</span>
-                        </div>
-                    </div>
-                    <p class="text-xs text-zinc-300 leading-relaxed">
-                        Этот чат работает на базе облачной базы данных Firebase. Пожалуйста, соблюдайте правила при общении:
-                    </p>
-                </div>
-
-                <div class="space-y-3">
-                    <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 flex items-start space-x-3">
-                        <div class="w-7 h-7 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
-                        <div>
-                            <h3 class="font-bold text-xs text-white mb-1">Уважение и вежливость</h3>
-                            <p class="text-xs text-zinc-400 leading-relaxed">Никаких взаимных оскорблений, мата и агрессии. Уважайте личные границы ваших соседей.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <button onclick="window.switchView('chats')" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-medium transition border border-zinc-700/50 mt-auto">
-                    Вернуться в чат
-                </button>
-            </div>
-
-        </main>
+    <!-- Экран входа -->
+    <div id="loginScreen" class="w-full max-w-sm bg-[#17212b] p-8 rounded-2xl shadow-2xl text-center z-50">
+        <h1 class="text-3xl font-bold mb-2 text-white">FamilyConnect</h1>
+        <input type="text" id="nameInput" placeholder="Ваше имя..." class="w-full p-4 mb-3 rounded-xl bg-[#242f3d] border-none text-white focus:outline-none">
+        <input type="password" id="passInput" placeholder="Пароль..." class="w-full p-4 mb-4 rounded-xl bg-[#242f3d] border-none text-white focus:outline-none">
+        <button id="loginBtn" class="w-full py-4 bg-[#5288c1] rounded-xl font-bold text-lg">Войти</button>
     </div>
-    <!-- ИНТЕГРАЦИЯ С БАЗОЙ ДАННЫХ FIREBASE -->
-    <script type="module">
-        import { initializeApp } from "https://gstatic.com";
-        import { getDatabase, ref, push, onChildAdded } from "https://gstatic.com";
 
-        // Ваши личные подтвержденные ключи Firebase
+    <!-- Основной чат -->
+    <div id="chatContainer" class="hidden w-full h-full max-w-md bg-[#0e1621] flex flex-col relative shadow-2xl sm:h-[90vh] sm:rounded-3xl overflow-hidden border border-gray-800">
+        <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-3 pb-20"></div>
+        <div class="bg-[#17212b] p-2 flex items-end gap-2 z-30">
+            <textarea id="msgInput" rows="1" placeholder="Сообщение..." class="flex-1 p-3 rounded-xl bg-[#242f3d] focus:outline-none text-white resize-none"></textarea>
+            <button id="sendBtn" class="p-4 bg-[#5288c1] rounded-full text-white">✉️</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
         const firebaseConfig = {
-            apiKey: "AIzaSyD7T1RmTcvli4M0BPt9SsXtsJpxmDHF-Fc",
-            authDomain: "://firebaseapp.com",
-            databaseURL: "https://firebaseio.com",
-            projectId: "rayon-chat",
-            storageBucket: "rayon-chat.firebasestorage.app",
-            messagingSenderId: "1044947182076",
-            appId: "1:1044947182076:web:6278bbafdcb4fed66bd279",
-            measurementId: "G-JQ8GFMY4JQ"
+            apiKey: "AIzaSyDZ82pn4M8CX_2ySPBXjDBscfZVpS7mo_o",
+            databaseURL: "https://familyconnect-f3026-default-rtdb.firebaseio.com",
+            projectId: "familyconnect-f3026",
+            storageBucket: "familyconnect-f3026.firebasestorage.app",
+            appId: "1:586629397170:web:2560475f7b9c1315fda7ab"
         };
 
-        // Инициализация сервисов
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const messagesRef = ref(db, 'district_messages');
+        const messagesRef = ref(db, 'messages');
 
-        // Генерация случайного имени пользователя для теста
-        const currentUserId = 'Сосед_' + Math.floor(Math.random() * 900 + 100);
+        let myName = localStorage.getItem('myName');
+        const myId = localStorage.getItem('myChatId') || Math.random().toString(36).substring(2, 10);
+        localStorage.setItem('myChatId', myId);
 
-        // Находим элементы DOM
-        const connectionDot = document.getElementById('connection-dot');
-        const userIdBadge = document.getElementById('user-id-badge');
-        const messagesContainer = document.getElementById('chats-list-container');
-        const emptyState = document.getElementById('chats-empty-state');
-        const messageInput = document.getElementById('message-input');
-        const sendBtn = document.getElementById('send-btn');
-
-        // Логика переключения экранов (Чат / Правила)
-        window.switchView = function(viewName) {
-            if (viewName === 'rules') {
-                document.getElementById('view-chats').classList.add('hidden');
-                document.getElementById('view-rules').classList.remove('hidden');
+        document.getElementById('loginBtn').onclick = () => {
+            const name = document.getElementById('nameInput').value;
+            const pass = document.getElementById('passInput').value;
+            if (pass === "pipiki" && name.trim() !== "") {
+                localStorage.setItem('myName', name);
+                myName = name;
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('chatContainer').classList.remove('hidden');
+                if (Notification.permission !== "granted") Notification.requestPermission();
             } else {
-                document.getElementById('view-rules').classList.add('hidden');
-                document.getElementById('view-chats').classList.remove('hidden');
+                alert("Введите имя и правильный пароль");
             }
-        }
+        };
 
-        // Логика отправки сообщения
-        function handleSendMessage() {
-            const text = messageInput.value.trim();
-            if (text === '') return;
+        document.getElementById('sendBtn').onclick = () => {
+            const input = document.getElementById('msgInput');
+            if (input.value.trim() !== "") {
+                push(messagesRef, { text: input.value, sender: myName, id: myId, time: Date.now() });
+                input.value = "";
+            }
+        };
 
-            push(messagesRef, {
-                username: currentUserId,
-                message: text,
-                timestamp: Date.now()
-            }).then(() => {
-                messageInput.value = '';
-            }).catch((err) => {
-                console.error("Ошибка при отправке в Firebase:", err);
-            });
-        }
-
-        sendBtn.addEventListener('click', handleSendMessage);
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleSendMessage();
-        });
-
-        // Слушатель событий базы данных: рендерит сообщения в реальном времени
-        onChildAdded(messagesRef, (snapshot) => {
-            const data = snapshot.val();
-            if (!data) return;
-
-            if (emptyState) emptyState.classList.add('hidden');
-
-            const isOwnMessage = data.username === currentUserId;
-
-            // Верный рендер сообщений с выравниванием
-            const msgElement = document.createElement('div');
-            msgElement.className = `p-3 rounded-2xl border max-w-[85%] mb-2 transition flex flex-col ${
-                isOwnMessage 
-                    ? 'bg-emerald-600/10 border-emerald-500/20 ml-auto items-end' 
-                    : 'bg-zinc-900/50 border-zinc-800 mr-auto items-start'
-            }`;
-
-            const timeString = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-            msgElement.innerHTML = `
-                <div class="flex items-center space-x-2 mb-0.5">
-                    <span class="text-[11px] font-bold ${isOwnMessage ? 'text-emerald-400' : 'text-zinc-400'}">${data.username}</span>
-                    <span class="text-[9px] text-zinc-600">${timeString}</span>
-                </div>
-                <p class="text-xs text-zinc-200 break-all leading-relaxed">${data.message}</p>
+        onChildAdded(messagesRef, (data) => {
+            const msg = data.val();
+            const isMe = msg.id === myId;
+            const msgsDiv = document.getElementById('messages');
+            
+            const div = document.createElement('div');
+            div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} message-bubble`;
+            div.innerHTML = `
+                <span class="text-[10px] text-gray-500 mb-1">${msg.sender}</span>
+                <div class="p-3 ${isMe ? 'bg-[#2b5278]' : 'bg-[#182533]'} rounded-2xl max-w-[80%]">${msg.text}</div>
             `;
+            msgsDiv.appendChild(div);
+            msgsDiv.scrollTop = msgsDiv.scrollHeight;
 
-            messagesContainer.appendChild(msgElement);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            if (!isMe && document.hidden) {
+                new Notification("Новое сообщение от " + msg.sender, { body: msg.text });
+            }
+
+            setTimeout(() => { div.classList.add('fade-out'); setTimeout(() => div.remove(), 1500); }, 60000);
         });
-
-        // Включаем статус "Подключено" (Зеленая точка)
-        connectionDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-        userIdBadge.innerText = currentUserId;
     </script>
 </body>
 </html>
