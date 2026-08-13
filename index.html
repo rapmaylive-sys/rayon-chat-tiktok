@@ -284,36 +284,54 @@
         let activeTab = 'chats';
         let currentChatId = null;
 
-        let chats = [];
-        let chatMessages = {};
-        let feedPosts = [];
+        let chats = [
+            { id: 'default_1', name: '📢 Главные новости района', lastMessage: 'Добро пожаловать в Pulse!', time: '12:00', avatar: 'https://placehold.co/100x100/10b981/ffffff?text=П', createdBy: 'system' },
+            { id: 'default_2', name: '💬 Общий чат соседей', lastMessage: 'Кто терял кота?', time: '12:05', avatar: 'https://placehold.co/100x100/059669/ffffff?text=О', createdBy: 'system' }
+        ];
+        let chatMessages = {
+            'default_1': [
+                { senderId: 'system', senderName: 'Админ', text: 'Добро пожаловать в районный чат Pulse! Здесь вы можете общаться с соседями.', time: '12:00' }
+            ],
+            'default_2': [
+                { senderId: 'neighbor1', senderName: 'Сосед (412a)', text: 'Всем привет! Отличная погода сегодня.', time: '12:05' }
+            ]
+        };
+        let feedPosts = [
+            { id: 'f_1', author: 'Управляющая компания', time: '11:30', caption: 'Завтра с 10:00 до 14:00 будет плановое отключение воды в доме №4.', likes: 5 }
+        ];
         let selectedMediaData = null;
 
         window.onload = async function() {
             try {
                 if (window.supabase && typeof window.supabase.createClient === 'function') {
+                    // Try initializing Supabase client with dummy or real credentials
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 }
                 document.getElementById('user-id-badge').innerText = 'ID: ' + userId.substring(0, 7);
-                document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-                document.getElementById('cloud-status-text').innerText = "Supabase Active";
                 
-                showToast("⚡ Supabase", "Система инициализирована.");
-
+                // Try fetching remote data, fallback smoothly if offline or WebSocket blocked
                 await loadChats();
                 await loadFeed();
                 setupRealtimeSubscriptions();
             } catch (e) {
-                console.warn("Supabase initialization notice:", e.message);
-                document.getElementById('cloud-status-text').innerText = "Автономный режим";
-                document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-blue-500";
-                renderChats();
-                renderFeed();
+                console.warn("Supabase fallback mode:", e.message);
+                activateFallbackMode("Автономный режим (WebSocket заблокирован в песочнице)");
             }
         };
 
+        function activateFallbackMode(reason) {
+            document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-blue-500";
+            document.getElementById('cloud-status-text').innerText = "Локальная память";
+            showToast("ℹ️ Режим", reason);
+            renderChats();
+            renderFeed();
+        }
+
         async function loadChats() {
-            if (!supabaseClient) return;
+            if (!supabaseClient) {
+                renderChats();
+                return;
+            }
             try {
                 const { data, error } = await supabaseClient
                     .from('chats')
@@ -321,7 +339,7 @@
                     .order('created_at', { ascending: false });
                 
                 if (error) throw error;
-                if (data) {
+                if (data && data.length > 0) {
                     chats = data.map(c => ({
                         id: c.id,
                         name: c.name,
@@ -330,15 +348,20 @@
                         avatar: c.avatar || ('https://placehold.co/100x100/10b981/ffffff?text=' + encodeURIComponent(c.name.charAt(0).toUpperCase())),
                         createdBy: c.created_by
                     }));
-                    renderChats();
                 }
-            } catch (err) {
+                document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('cloud-status-text').innerText = "Supabase Active";
                 renderChats();
+            } catch (err) {
+                activateFallbackMode("Используем локальный кэш чатов");
             }
         }
 
         async function loadFeed() {
-            if (!supabaseClient) return;
+            if (!supabaseClient) {
+                renderFeed();
+                return;
+            }
             try {
                 const { data, error } = await supabaseClient
                     .from('feed_posts')
@@ -346,7 +369,7 @@
                     .order('created_at', { ascending: false });
                 
                 if (error) throw error;
-                if (data) {
+                if (data && data.length > 0) {
                     feedPosts = data.map(p => ({
                         id: p.id,
                         author: p.author,
@@ -357,8 +380,8 @@
                         likes: p.likes || 0,
                         createdBy: p.created_by
                     }));
-                    renderFeed();
                 }
+                renderFeed();
             } catch (err) {
                 renderFeed();
             }
@@ -367,27 +390,37 @@
         function setupRealtimeSubscriptions() {
             if (!supabaseClient) return;
             try {
-                supabaseClient
-                    .channel('public-db-changes')
+                const channel = supabaseClient.channel('public-db-changes');
+                channel
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => loadChats())
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'feed_posts' }, () => loadFeed())
                     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
                         const newMsg = payload.new;
                         if (newMsg && currentChatId === newMsg.chat_id) {
                             if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
-                            chatMessages[currentChatId].push({
-                                senderId: newMsg.sender_id,
-                                senderName: newMsg.sender_name,
-                                text: newMsg.text,
-                                mediaUrl: newMsg.media_url,
-                                mediaType: newMsg.media_type,
-                                time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                            });
-                            renderMessages();
+                            // Avoid duplicating our own sent messages
+                            if (!chatMessages[currentChatId].some(m => m.text === newMsg.text && m.senderId === newMsg.sender_id)) {
+                                chatMessages[currentChatId].push({
+                                    senderId: newMsg.sender_id,
+                                    senderName: newMsg.sender_name,
+                                    text: newMsg.text,
+                                    mediaUrl: newMsg.media_url,
+                                    mediaType: newMsg.media_type,
+                                    time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                });
+                                renderMessages();
+                            }
                         }
                     })
-                    .subscribe();
-            } catch(e) {}
+                    .subscribe((status) => {
+                        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                            console.warn("Realtime WebSocket connection restricted in canvas environment.");
+                            activateFallbackMode("Автономный режим (WebSocket ограничен)");
+                        }
+                    });
+            } catch(e) {
+                activateFallbackMode("Локальный режим работы");
+            }
         }
 
         // Exported global functions attached to window
@@ -536,7 +569,7 @@
                         .eq('chat_id', id)
                         .order('created_at', { ascending: true });
                     
-                    if (!error && data) {
+                    if (!error && data && data.length > 0) {
                         chatMessages[id] = data.map(m => ({
                             senderId: m.sender_id,
                             senderName: m.sender_name,
