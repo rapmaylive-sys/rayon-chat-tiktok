@@ -4,19 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pulse — Районный Живой Чат (Firebase)</title>
-    <!-- Подключаем Tailwind, шрифты и иконки -->
+    <!-- Tailwind CSS -->
     <script src="https://tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cloudflare.com">
+    <!-- Google Fonts Inter -->
     <link href="https://googleapis.com" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+        #chats-list-container { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        input { -webkit-appearance: none; }
+    </style>
 </head>
 <body class="h-full overflow-hidden flex justify-center items-center bg-zinc-950">
 
+    <!-- ЦЕНТРАЛЬНЫЙ СМАРТФОН-ФРЕЙМ ЧАТА -->
     <div class="w-full h-full max-w-md bg-zinc-900 shadow-2xl flex flex-col relative overflow-hidden border border-zinc-800 sm:rounded-3xl">
 
-        <!-- ВЕРХНЯЯ ПАНЕЛЬ С ИНДИКАТОРАМИ СТАТУСА -->
+        <!-- TOP APP HEADER -->
         <header class="h-16 px-4 bg-zinc-900/85 backdrop-blur-md border-b border-zinc-800 flex items-center justify-between z-20 shrink-0">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-500/30">
                     <i class="fa-solid fa-bolt"></i>
                 </div>
                 <div>
@@ -34,7 +46,7 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="alert('Сигнал SOS отправлен соседям!')" class="px-3 py-1.5 bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-semibold rounded-xl hover:bg-red-500/25 transition flex items-center space-x-1.5">
+                <button onclick="alert('Сигнал SOS отправлен соседям!')" class="px-3 py-1.5 bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-semibold rounded-xl hover:bg-red-500/25 transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                     <span>SOS</span>
                 </button>
@@ -44,40 +56,40 @@
             </div>
         </header>
 
-        <!-- ОСНОВНАЯ ЗОНА КОНТЕНТА -->
+        <!-- MAIN CONTENT AREA -->
         <main id="main-content" class="flex-1 overflow-y-auto relative flex flex-col bg-zinc-950">
 
-            <!-- ЭКРАН ЧАТА -->
+            <!-- VIEW 1: CHATS (MESSAGES) -->
             <div id="view-chats" class="flex-1 flex flex-col h-full overflow-hidden">
                 <div class="p-3 border-b border-zinc-800 bg-zinc-900/50">
                     <div class="relative">
                         <i class="fa-solid fa-search absolute left-3.5 top-3 text-zinc-500 text-xs"></i>
-                        <input type="text" id="chat-search" placeholder="Поиск по сообщениям..." class="w-full bg-zinc-800 text-white pl-9 pr-4 py-2 rounded-xl text-xs focus:outline-none border border-zinc-700/40">
+                        <input type="text" id="chat-search" placeholder="Поиск по сообщениям..." class="w-full bg-zinc-800 text-white pl-9 pr-4 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 border border-zinc-700/40">
                     </div>
                 </div>
 
                 <!-- Контейнер для вывода сообщений -->
-                <div id="chats-list-container" class="flex-1 overflow-y-auto p-3 space-y-2">
-                    <!-- Заглушка пустого чата -->
+                <div id="chats-list-container" class="flex-1 overflow-y-auto p-4 space-y-3">
+                    <!-- Заглушка пустого экрана -->
                     <div id="chats-empty-state" class="flex flex-col items-center justify-center p-6 text-center h-full">
                         <div class="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 mb-3 text-xl">
                             <i class="fa-solid fa-comments"></i>
                         </div>
                         <h3 class="text-sm font-semibold text-zinc-300">В чате пока пусто</h3>
-                        <p class="text-xs text-zinc-500 mt-1 max-w-[220px]">Напишите сообщение ниже, чтобы начать разговор.</p>
+                        <p class="text-xs text-zinc-500 mt-1 max-w-[220px]">Напишите первое сообщение ниже, чтобы начать общение с соседями.</p>
                     </div>
                 </div>
 
-                <!-- ПАНЕЛЬ ВВОДА И КНОПКА ОТПРАВКИ -->
-                <div class="p-3 bg-zinc-900/90 border-t border-zinc-800 flex items-center space-x-2">
-                    <input type="text" id="message-input" placeholder="Напишите сообщение соседям..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-xl text-xs focus:outline-none border border-zinc-700/40">
-                    <button id="send-btn" class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition">
+                <!-- ПАНЕЛЬ ОТПРАВКИ СООБЩЕНИЯ -->
+                <div class="p-3 bg-zinc-900/90 border-t border-zinc-800 flex items-center space-x-2 shrink-0">
+                    <input type="text" id="message-input" placeholder="Напишите сообщение соседям..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 border border-zinc-700/40">
+                    <button id="send-btn" class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition shadow-lg shadow-emerald-600/20">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- ЭКРАН ПРАВИЛ -->
+            <!-- VIEW 2: RULES -->
             <div id="view-rules" class="hidden flex-1 flex flex-col h-full overflow-y-auto p-4 space-y-4">
                 <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-4 shadow-lg">
                     <div class="flex items-center space-x-3 mb-3">
@@ -90,59 +102,33 @@
                         </div>
                     </div>
                     <p class="text-xs text-zinc-300 leading-relaxed">
-                        Этот чат создан для оперативной связи между жильцами. Пожалуйста, соблюдайте базовые правила платформы.
+                        Этот чат работает на базе облачной базы данных Firebase. Пожалуйста, соблюдайте правила при общении:
                     </p>
                 </div>
 
-                <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 flex items-start space-x-3">
-                    <div class="w-7 h-7 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
-                    <div>
-                        <h3 class="font-bold text-xs text-white mb-1">Уважение и вежливость</h3>
-                        <p class="text-xs text-zinc-400 leading-relaxed">Запрещены взаимные оскорбления, нецензурная лексика, спам и любая агрессия в адрес ваших соседей.</p>
+                <div class="space-y-3">
+                    <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 flex items-start space-x-3">
+                        <div class="w-7 h-7 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
+                        <div>
+                            <h3 class="font-bold text-xs text-white mb-1">Уважение и вежливость</h3>
+                            <p class="text-xs text-zinc-400 leading-relaxed">Никаких взаимных оскорблений, мата и агрессии. Уважайте личные границы ваших соседей.</p>
+                        </div>
                     </div>
                 </div>
                 
-                <button onclick="window.switchView('chats')" class="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-medium transition">
+                <button onclick="window.switchView('chats')" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-medium transition border border-zinc-700/50 mt-auto">
                     Вернуться в чат
                 </button>
             </div>
 
         </main>
     </div>
-    <style>
-        /* Стилизация полосы прокрутки для браузеров WebKit (Chrome, Safari, Edge) */
-        ::-webkit-scrollbar { 
-            width: 4px; 
-            height: 4px; 
-        }
-        ::-webkit-scrollbar-track { 
-            background: transparent; 
-        }
-        ::-webkit-scrollbar-thumb { 
-            background: #27272a; 
-            border-radius: 9999px; 
-        }
-        ::-webkit-scrollbar-thumb:hover { 
-            background: #3f3f46; 
-        }
-        
-        /* Плавный скролл и скрытие дефолтных рамок ввода на iOS */
-        #chats-list-container {
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-        }
-        input {
-            -webkit-appearance: none;
-        }
-    </style>
-</head>
-    <!-- ЛОГИКА ВЗАИМОДЕЙСТВИЯ С FIREBASE REALTIME DATABASE -->
+    <!-- ИНТЕГРАЦИЯ С БАЗОЙ ДАННЫХ FIREBASE -->
     <script type="module">
-        // Импортируем модули ядра и базы данных Firebase
         import { initializeApp } from "https://gstatic.com";
         import { getDatabase, ref, push, onChildAdded } from "https://gstatic.com";
 
-        // Конфигурация вашего проекта Rayon Chat
+        // Ваши личные подтвержденные ключи Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyD7T1RmTcvli4M0BPt9SsXtsJpxmDHF-Fc",
             authDomain: "://firebaseapp.com",
@@ -154,15 +140,15 @@
             measurementId: "G-JQ8GFMY4JQ"
         };
 
-        // Инициализируем подключение к базе данных
+        // Инициализация сервисов
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const messagesRef = ref(db, 'district_messages'); // Ветка в БД, где хранятся сообщения
+        const messagesRef = ref(db, 'district_messages');
 
-        // Генерируем случайное имя пользователя для теста (например, Сосед_452)
+        // Генерация случайного имени пользователя для теста
         const currentUserId = 'Сосед_' + Math.floor(Math.random() * 900 + 100);
 
-        // Находим элементы управления на странице
+        // Находим элементы DOM
         const connectionDot = document.getElementById('connection-dot');
         const userIdBadge = document.getElementById('user-id-badge');
         const messagesContainer = document.getElementById('chats-list-container');
@@ -170,7 +156,7 @@
         const messageInput = document.getElementById('message-input');
         const sendBtn = document.getElementById('send-btn');
 
-        // Глобальная функция переключения экранов (Чат / Правила)
+        // Логика переключения экранов (Чат / Правила)
         window.switchView = function(viewName) {
             if (viewName === 'rules') {
                 document.getElementById('view-chats').classList.add('hidden');
@@ -181,39 +167,37 @@
             }
         }
 
-        // Функция отправки нового сообщения в Firebase
+        // Логика отправки сообщения
         function handleSendMessage() {
             const text = messageInput.value.trim();
-            if (text === '') return; // Игнорируем пустые сообщения
+            if (text === '') return;
 
             push(messagesRef, {
                 username: currentUserId,
                 message: text,
                 timestamp: Date.now()
             }).then(() => {
-                messageInput.value = ''; // Очищаем поле ввода после отправки
+                messageInput.value = '';
             }).catch((err) => {
                 console.error("Ошибка при отправке в Firebase:", err);
             });
         }
 
-        // Привязываем логику к кнопке бумажного самолетика и к клавише Enter
         sendBtn.addEventListener('click', handleSendMessage);
         messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') handleSendMessage();
         });
 
-        // СЛУШАТЕЛЬ REALTIME ОБНОВЛЕНИЙ: Выводит новые сообщения у всех пользователей одновременно
+        // Слушатель событий базы данных: рендерит сообщения в реальном времени
         onChildAdded(messagesRef, (snapshot) => {
             const data = snapshot.val();
             if (!data) return;
 
-            // Скрываем заглушку пустого экрана, когда появилось первое сообщение
             if (emptyState) emptyState.classList.add('hidden');
 
             const isOwnMessage = data.username === currentUserId;
 
-            // Создаем красивую плашку сообщения в стиле вашего UI
+            // Верный рендер сообщений с выравниванием
             const msgElement = document.createElement('div');
             msgElement.className = `p-3 rounded-2xl border max-w-[85%] mb-2 transition flex flex-col ${
                 isOwnMessage 
@@ -221,7 +205,6 @@
                     : 'bg-zinc-900/50 border-zinc-800 mr-auto items-start'
             }`;
 
-            // Форматируем время в формат ЧЧ:ММ
             const timeString = new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             msgElement.innerHTML = `
@@ -232,14 +215,11 @@
                 <p class="text-xs text-zinc-200 break-all leading-relaxed">${data.message}</p>
             `;
 
-            // Добавляем созданный элемент в контейнер сообщений
             messagesContainer.appendChild(msgElement);
-            
-            // Автоматически прокручиваем чат к последнему сообщению
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         });
 
-        // Красим индикатор подключения в шапке в зеленый цвет и выводим ID пользователя
+        // Включаем статус "Подключено" (Зеленая точка)
         connectionDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
         userIdBadge.innerText = currentUserId;
     </script>
