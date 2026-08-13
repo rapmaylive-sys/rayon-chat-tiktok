@@ -30,9 +30,16 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-sm text-white tracking-wide">Pulse Район</h1>
-                    <div class="flex items-center space-x-1.5 mt-0.5">
-                        <span id="connection-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                        <span id="user-id-badge" class="text-[11px] text-zinc-400 font-medium truncate max-w-[120px]">Подключение...</span>
+                    <div class="flex items-center space-x-2 mt-0.5">
+                        <div class="flex items-center space-x-1">
+                            <span id="connection-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span id="user-id-badge" class="text-[11px] text-zinc-400 font-medium truncate max-w-[90px]">Подключение...</span>
+                        </div>
+                        <span class="text-zinc-600">|</span>
+                        <div class="flex items-center space-x-1 text-[11px] text-emerald-400 font-medium" title="Онлайн в районе">
+                            <i class="fa-solid fa-users text-[10px]"></i>
+                            <span id="online-count-badge">1 онлайн</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -171,9 +178,14 @@
                     <!-- Messages injected here -->
                 </div>
 
+                <!-- Typing Indicator Bar -->
+                <div id="typing-indicator" class="px-4 py-1.5 text-[11px] text-zinc-400 italic hidden bg-zinc-900/40 border-t border-zinc-800/40">
+                    <span id="typing-text">Кто-то печатает...</span>
+                </div>
+
                 <!-- Chat input footer -->
                 <div class="p-3 bg-zinc-900 border-t border-zinc-800 flex items-center space-x-2 shrink-0">
-                    <input type="text" id="room-message-input" onkeydown="if(event.key==='Enter') sendChatMessage()" placeholder="Написать сообщение..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-2xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-zinc-700/50">
+                    <input type="text" id="room-message-input" oninput="handleTypingInput()" onkeydown="if(event.key==='Enter') sendChatMessage()" placeholder="Написать сообщение..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-2xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-zinc-700/50">
                     <button onclick="sendChatMessage()" class="w-10 h-10 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-600/30 transition shrink-0">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
@@ -181,138 +193,30 @@
             </div>
 
         </main>
-
-        <!-- FLOATING ACTION BUTTON (Contextual) -->
-        <div class="absolute right-4 bottom-20 z-20">
-            <button id="fab-button" onclick="handleFabClick()" class="w-12 h-12 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-xl shadow-indigo-600/40 hover:scale-105 active:scale-95 transition">
-                <i id="fab-icon" class="fa-solid fa-plus text-sm"></i>
-            </button>
-        </div>
-
-        <!-- BOTTOM NAVIGATION BAR -->
-        <nav class="h-16 bg-zinc-900/90 backdrop-blur-md border-t border-zinc-800 flex items-center justify-around px-2 z-20 shrink-0">
-            <button onclick="switchTab('chats')" id="nav-chats" class="flex-1 flex flex-col items-center justify-center py-1 text-indigo-400 transition">
-                <i class="fa-solid fa-comments text-base mb-0.5"></i>
-                <span class="text-[10px] font-semibold">Чаты</span>
-            </button>
-            <button onclick="switchTab('feed')" id="nav-feed" class="flex-1 flex flex-col items-center justify-center py-1 text-zinc-500 hover:text-zinc-300 transition">
-                <i class="fa-solid fa-newspaper text-base mb-0.5"></i>
-                <span class="text-[10px] font-medium">Лента</span>
-            </button>
-            <button onclick="switchTab('rules')" id="nav-rules" class="flex-1 flex flex-col items-center justify-center py-1 text-zinc-500 hover:text-zinc-300 transition">
-                <i class="fa-solid fa-book-open text-base mb-0.5"></i>
-                <span class="text-[10px] font-medium">Правила</span>
-            </button>
-        </nav>
-
-        <!-- 1. CREATE POST MODAL -->
-        <div id="create-modal" class="absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-3xl p-5 flex flex-col space-y-4 shadow-2xl">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-sm text-white">Новая публикация</h3>
-                    <button onclick="closeCreateModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
-                </div>
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-[11px] font-medium text-zinc-400 mb-1">Медиафайл (Фото или Видео)</label>
-                        <input id="create-file-input" type="file" accept="image/*,video/*" onchange="previewMedia(this)" class="w-full text-xs text-zinc-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
-                    </div>
-                    <div id="create-preview-box" class="w-full h-32 bg-zinc-950 rounded-2xl overflow-hidden flex items-center justify-center border border-dashed border-zinc-700/60 relative">
-                        <span class="text-xs text-zinc-500">Предпросмотр медиа</span>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-zinc-400 mb-1">Описание к посту</label>
-                        <textarea id="create-caption-input" placeholder="Что происходит в районе..." rows="3" class="w-full bg-zinc-800 text-white p-3 rounded-2xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none border border-zinc-700/40"></textarea>
-                    </div>
-                </div>
-                <button onclick="publishNewPost()" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-2xl font-bold text-xs shadow-lg shadow-indigo-500/20 hover:opacity-90 transition">Опубликовать в ленту</button>
-            </div>
-        </div>
-
-        <!-- 2. NEW CHAT MODAL -->
-        <div id="new-chat-modal" class="absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-3xl p-5 flex flex-col space-y-4 shadow-2xl">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-sm text-white">Новый чат или группа</h3>
-                    <button onclick="closeNewChatModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
-                </div>
-                <div>
-                    <label class="block text-[11px] font-medium text-zinc-400 mb-1">Название обсуждения или имя собеседника</label>
-                    <input id="new-chat-name-input" type="text" placeholder="Например: Соседи из 4-го подъезда..." class="w-full bg-zinc-800 text-white p-3 rounded-2xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-zinc-700/40">
-                </div>
-                <button onclick="submitNewChat()" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 rounded-2xl font-bold text-xs shadow-lg shadow-indigo-500/20 hover:opacity-90 transition">Создать чат</button>
-            </div>
-        </div>
-
-        <!-- 3. SOS / EMERGENCY ALERT MODAL -->
-        <div id="sos-modal" class="absolute inset-0 bg-red-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-zinc-900 border border-red-500/40 w-full max-w-sm rounded-3xl p-5 flex flex-col space-y-4 shadow-2xl">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-sm text-red-400 flex items-center space-x-2">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>Экстренное оповещение SOS</span>
-                    </h3>
-                    <button onclick="closeSosModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
-                </div>
-                <p class="text-xs text-zinc-300 leading-relaxed">Отправить мгновенный сигнал тревоги всем соседям в радиусе вашего квартала с вашим статусом безопасности.</p>
-                <div class="space-y-2">
-                    <button onclick="sendSosAlert('🚨 СРОЧНО: Требуется помощь в нашем районе!')" class="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded-2xl font-bold text-xs shadow-lg shadow-red-600/30 transition">Запросить помощь</button>
-                    <button onclick="sendSosAlert('⚠️ Внимание: Замечена опасная ситуация / БПЛА')" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-2xl font-bold text-xs shadow-lg shadow-amber-600/30 transition">Сообщить об угрозе / БПЛА</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. INFO MODAL -->
-        <div id="info-modal" class="absolute inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-zinc-900 border border-zinc-800 w-full max-w-sm rounded-3xl p-5 flex flex-col space-y-4 shadow-2xl">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-sm text-white flex items-center space-x-2">
-                        <i class="fa-solid fa-wave-square text-indigo-400"></i>
-                        <span>О приложении Pulse</span>
-                    </h3>
-                    <button onclick="closeInfoModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
-                </div>
-                <p class="text-xs text-zinc-300 leading-relaxed">
-                    <strong>Pulse</strong> — районный живой чат и новостная медиа-лента для оперативной связи между соседями в режиме реального времени. Публикуйте фото и видео происшествий, общайтесь в чатах и используйте экстренную кнопку SOS.
-                </p>
-                <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center space-x-2.5">
-                    <i class="fa-solid fa-cloud-arrow-up text-emerald-400 text-base"></i>
-                    <span id="cloud-status-text" class="text-[11px] text-emerald-300 font-medium">Проверка облачного подключения...</span>
-                </div>
-                <button onclick="closeInfoModal()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-2xl font-bold text-xs transition">Понятно</button>
-            </div>
-        </div>
-
-        <!-- Custom Toast Notification -->
-        <div id="toast" class="absolute top-20 left-1/2 -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white px-4 py-2.5 rounded-2xl text-xs font-medium shadow-2xl opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center space-x-2">
-            <i class="fa-solid fa-circle-check text-emerald-400"></i>
-            <span id="toast-text">Успешно</span>
-        </div>
-
-    </div>
-
-    <!-- Firebase & App Logic Script -->
+<!-- ... --><!-- Firebase & App Logic Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Импорт Firebase Realtime Database модулей
+        import { getDatabase, ref, set, onValue, push, remove, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
         // Real Firebase Configuration
         const firebaseConfig = {
           apiKey: "AIzaSyAXMH1DVfRiW2Wj_Ii9autxHga97XIJKhc",
           authDomain: "district-chat-rostov.firebaseapp.com",
           projectId: "district-chat-rostov",
+          databaseURL: "https://district-chat-rostov-default-rtdb.firebaseio.com",
           storageBucket: "district-chat-rostov.firebasestorage.app",
           messagingSenderId: "693036997617",
           appId: "1:693036997617:web:c656d47946b58585464250"
         };
 
         const appId = 'district-chat-rostov';
-        let app, db, auth, userId = 'guest-' + Math.floor(Math.random()*1000);
+        let app, db, rtdb, auth, userId = 'guest-' + Math.floor(Math.random()*1000);
         let activeTab = 'chats';
         let currentChatId = null;
 
-        // Изначально списки полностью пустые (без фейковых записей)
         let chats = [];
         let chatMessages = {};
         let feedPosts = [];
@@ -321,11 +225,14 @@
         let unsubChats = null;
         let unsubFeed = null;
         let unsubMessages = null;
+        let rtdbTypingUnsub = null;
+        let typingTimeout = null;
 
         window.onload = async function() {
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
+                rtdb = getDatabase(app); // Инициализация Realtime Database
                 auth = getAuth(app);
 
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -337,15 +244,141 @@
                 userId = auth.currentUser?.uid || crypto.randomUUID();
                 document.getElementById('user-id-badge').innerText = 'ID: ' + userId.substring(0, 6);
                 document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-                document.getElementById('cloud-status-text').innerText = "Облачная синхронизация Firestore активна!";
-                showToast("☁️ Облако", "Успешное подключение к базе данных.");
+                document.getElementById('cloud-status-text').innerText = "Cloud Firestore + Realtime DB активны!";
+                showToast("⚡ Realtime", "Успешное подключение к Realtime Database и Firestore.");
+
+                // Настройка статуса присутствия (Presence) в RTDB
+                setupRealtimePresence(userId);
+
             } catch (e) {
                 console.warn("Firebase local/fallback mode:", e.message);
                 userId = 'local-' + Math.floor(Math.random()*10000);
                 document.getElementById('user-id-badge').innerText = 'Локальный режим';
                 document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-blue-500";
-                document.getElementById('cloud-status-text').innerText = "Работа в автономном режиме (в памяти устройства)";
+                document.getElementById('cloud-status-text').innerText = "Работа в автономном режиме";
             }
+
+            initRealtimeListeners();
+            renderChats();
+            renderFeed();
+        };
+
+        // Настройка онлайн статуса через RTDB (.info/connected и presence)
+        function setupRealtimePresence(uid) {
+            try {
+                const connectedRef = ref(rtdb, '.info/connected');
+                const userPresenceRef = ref(rtdb, `artifacts/${appId}/presence/${uid}`);
+                const onlineUsersRef = ref(rtdb, `artifacts/${appId}/presence`);
+
+                onValue(connectedRef, (snap) => {
+                    if (snap.val() === true) {
+                        // При отключении автоматически удаляем пользователя
+                        onDisconnect(userPresenceRef).remove();
+                        // Записываем текущее время / статус
+                        set(userPresenceRef, { online: true, lastSeen: serverTimestamp() });
+                    }
+                });
+
+                // Слушаем сколько всего пользователей онлайн
+                onValue(onlineUsersRef, (snapshot) => {
+                    const data = snapshot.val();
+                    const count = data ? Object.keys(data).length : 1;
+                    document.getElementById('online-count-badge').innerText = `${count} онлайн`;
+                });
+            } catch (err) {
+                console.warn("RTDB presence setup warning:", err);
+            }
+        }
+
+        // Индикатор набора текста в RTDB для активного чата
+        function listenToTyping(chatId) {
+            if (rtdbTypingUnsub) {
+                rtdbTypingUnsub();
+                rtdbTypingUnsub = null;
+            }
+            if (!rtdb) return;
+
+            try {
+                const typingRef = ref(rtdb, `artifacts/${appId}/typing/${chatId}`);
+                onValue(typingRef, (snapshot) => {
+                    const typingData = snapshot.val() || {};
+                    const indicator = document.getElementById('typing-indicator');
+                    const typingText = document.getElementById('typing-text');
+                    
+                    // Фильтруем других пользователей, которые печатают (исключая себя)
+                    const othersTyping = Object.keys(typingData).filter(id => id !== userId && typingData[id]);
+                    
+                    if (othersTyping.length > 0) {
+                        typingText.innerText = othersTyping.length === 1 ? 'Сосед печатает сообщение...' : 'Несколько соседей печатают...';
+                        indicator.classList.remove('hidden');
+                    } else {
+                        indicator.classList.add('hidden');
+                    }
+                });
+            } catch (e) {}
+        }
+
+        window.handleTypingInput = function() {
+            if (!rtdb || !currentChatId) return;
+            const myTypingRef = ref(rtdb, `artifacts/${appId}/typing/${currentChatId}/${userId}`);
+            
+            set(myTypingRef, true);
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                set(myTypingRef, null);
+            }, 2500);
+        }
+
+        // Firestore Realtime Listeners
+        function initRealtimeListeners() {
+            if (!db || !auth) return;
+
+            try {
+                const chatsCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats');
+                unsubChats = onSnapshot(chatsCol, (snapshot) => {
+                    chats = [];
+                    snapshot.forEach(docSnap => {
+                        chats.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    chats.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    renderChats(document.getElementById('chat-search')?.value || '');
+                }, (error) => console.warn("Chats sync offline fallback"));
+
+                const feedCol = collection(db, 'artifacts', appId, 'public', 'data', 'feed');
+                unsubFeed = onSnapshot(feedCol, (snapshot) => {
+                    feedPosts = [];
+                    snapshot.forEach(docSnap => {
+                        feedPosts.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    feedPosts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                    renderFeed();
+                }, (error) => console.warn("Feed sync offline fallback"));
+            } catch (err) {
+                console.log("Using local state arrays.");
+            }
+        }
+
+        function listenToMessages(chatId) {
+            if (unsubMessages) unsubMessages();
+            if (!db || !auth) return;
+
+            listenToTyping(chatId);
+
+            try {
+                const msgCol = collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}_messages`);
+                unsubMessages = onSnapshot(msgCol, (snapshot) => {
+                    const msgs = [];
+                    snapshot.forEach(docSnap => {
+                        msgs.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    msgs.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                    chatMessages[chatId] = msgs;
+                    if (currentChatId === chatId) {
+                        renderMessages();
+                    }
+                }, (error) => console.log("Local message sync"));
+            } catch (e) {}
+        }
 
             initRealtimeListeners();
             renderChats();
@@ -571,6 +604,10 @@
         window.closeChatRoom = function() {
             document.getElementById('view-chat-room').classList.add('hidden');
             if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+            if (rtdb && currentChatId) {
+                // Очищаем статус набора текста при закрытии комнаты
+                set(ref(rtdb, `artifacts/${appId}/typing/${currentChatId}/${userId}`), null);
+            }
             currentChatId = null;
             renderChats();
         }
@@ -617,6 +654,11 @@
             const text = input.value.trim();
             if (!text && !selectedMediaData) return;
 
+            // Сбрасываем статус печати в RTDB
+            if (rtdb && currentChatId) {
+                set(ref(rtdb, `artifacts/${appId}/typing/${currentChatId}/${userId}`), null);
+            }
+
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const msgData = {
                 senderId: userId,
@@ -635,9 +677,7 @@
                 try {
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `chat_${currentChatId}_messages`), msgData);
                     return;
-                } catch (e) {
-                    console.warn("Cloud msg send failed");
-                }
+                } catch (e) {}
             }
 
             if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
