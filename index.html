@@ -108,7 +108,7 @@
                         </div>
                     </div>
                     <div class="flex items-center space-x-1">
-                        <button onclick="attachMediaToChat()" class="w-9 h-9 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center text-xs">
+                        <button onclick="attachMediaToChat()" class="w-9 h-9 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center text-xs" title="Прикрепить файл">
                             <i class="fa-solid fa-paperclip"></i>
                         </button>
                     </div>
@@ -227,7 +227,7 @@
             </div>
         </div>
 
-        <!-- Toast Notification -->
+        <!-- Custom Toast Notification -->
         <div id="toast" class="absolute top-20 left-1/2 -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white px-4 py-2.5 rounded-2xl text-xs font-medium shadow-2xl opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center space-x-2">
             <i class="fa-solid fa-circle-check text-emerald-400"></i>
             <span id="toast-text">Успешно</span>
@@ -248,8 +248,7 @@
           projectId: "district-chat-rostov",
           storageBucket: "district-chat-rostov.firebasestorage.app",
           messagingSenderId: "693036997617",
-          appId: "1:693036997617:web:c656d47946b58585464250",
-          measurementId: "G-0WW550YGWE"
+          appId: "1:693036997617:web:c656d47946b58585464250"
         };
 
         const appId = 'district-chat-rostov';
@@ -257,6 +256,7 @@
         let activeTab = 'chats';
         let currentChatId = null;
 
+        // Изначально списки полностью пустые (без фейковых записей)
         let chats = [];
         let chatMessages = {};
         let feedPosts = [];
@@ -268,7 +268,6 @@
 
         window.onload = async function() {
             try {
-                // Initialize Firebase with the real configuration
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -290,35 +289,12 @@
                 document.getElementById('user-id-badge').innerText = 'Локальный режим';
                 document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-blue-500";
                 document.getElementById('cloud-status-text').innerText = "Работа в автономном режиме (в памяти устройства)";
-                
-                // Seed some initial mock data for instant preview when offline/testing
-                seedMockData();
             }
 
             initRealtimeListeners();
             renderChats();
             renderFeed();
         };
-
-        function seedMockData() {
-            chats = [
-                { id: 'c1', name: 'Соседи из 4-го подъезда', lastMessage: 'Кто заказывал воду в бутылях?', time: '14:20', avatar: 'https://placehold.co/100x100/6366f1/ffffff?text=4', createdBy: 'admin' },
-                { id: 'c2', name: 'Безопасность и Порядок', lastMessage: 'Заметил подозрительную машину у ворот', time: '12:05', avatar: 'https://placehold.co/100x100/ef4444/ffffff?text=SOS', createdBy: 'admin' }
-            ];
-            feedPosts = [
-                { 
-                    id: 'p1', 
-                    author: 'Житель (a82f)', 
-                    time: '13:45', 
-                    caption: 'Прекрасный закат над нашим районом сегодня! Всем хорошего вечера.', 
-                    mediaUrl: 'https://placehold.co/600x400/3b82f6/ffffff?text=Закат+в+районе', 
-                    mediaType: 'image', 
-                    likes: 5, 
-                    comments: [{ author: 'Анна', text: 'Очень красиво!', time: '13:50' }], 
-                    createdBy: 'other' 
-                }
-            ];
-        }
 
         // Firestore Realtime Listeners
         function initRealtimeListeners() {
@@ -372,27 +348,30 @@
         }
 
         // Tab Switching
-        function switchTab(tab) {
+        window.switchTab = function(tab) {
             activeTab = tab;
             const viewChats = document.getElementById('view-chats');
             const viewFeed = document.getElementById('view-feed');
             const navChats = document.getElementById('nav-chats');
             const navFeed = document.getElementById('nav-feed');
+            const fabIcon = document.getElementById('fab-icon');
 
             if (tab === 'chats') {
                 viewChats.classList.remove('hidden');
                 viewFeed.classList.add('hidden');
                 navChats.className = "flex-1 flex flex-col items-center justify-center py-1 text-indigo-400 transition";
                 navFeed.className = "flex-1 flex flex-col items-center justify-center py-1 text-zinc-500 hover:text-zinc-300 transition";
+                fabIcon.className = "fa-solid fa-plus text-sm";
             } else {
                 viewChats.classList.add('hidden');
                 viewFeed.classList.remove('hidden');
                 navFeed.className = "flex-1 flex flex-col items-center justify-center py-1 text-indigo-400 transition";
                 navChats.className = "flex-1 flex flex-col items-center justify-center py-1 text-zinc-500 hover:text-zinc-300 transition";
+                fabIcon.className = "fa-solid fa-camera text-sm";
             }
         }
 
-        function handleFabClick() {
+        window.handleFabClick = function() {
             if (activeTab === 'chats') {
                 openNewChatPrompt();
             } else {
@@ -438,20 +417,20 @@
             });
         }
 
-        function filterChats(query) {
+        window.filterChats = function(query) {
             renderChats(query);
         }
 
-        function openNewChatPrompt() {
+        window.openNewChatPrompt = function() {
             document.getElementById('new-chat-name-input').value = '';
             document.getElementById('new-chat-modal').classList.remove('hidden');
         }
 
-        function closeNewChatModal() {
+        window.closeNewChatModal = function() {
             document.getElementById('new-chat-modal').classList.add('hidden');
         }
 
-        async function submitNewChat() {
+        window.submitNewChat = async function() {
             const input = document.getElementById('new-chat-name-input');
             const name = input.value.trim();
             if (!name) return;
@@ -485,7 +464,7 @@
             showToast("✅ Чат", "Обсуждение создано локально.");
         }
 
-        async function deleteChatItem(event, chatId) {
+        window.deleteChatItem = async function(event, chatId) {
             event.stopPropagation();
             if (!confirm("Удалить этот чат?")) return;
 
@@ -503,7 +482,7 @@
             showToast("🗑️ Удалено", "Чат удален.");
         }
 
-        function openChatRoom(id) {
+        window.openChatRoom = function(id) {
             currentChatId = id;
             const chat = chats.find(c => c.id === id);
             if (!chat) return;
@@ -512,14 +491,14 @@
             document.getElementById('room-header-avatar').src = chat.avatar;
             document.getElementById('view-chat-room').classList.remove('hidden');
             
-            if (!chatMessages[id]) chatMessages[id] = [
-                { senderName: 'Система', text: 'Добро пожаловать в обсуждение! Пишите сообщения ниже.', time: 'Только что' }
-            ];
+            if (!chatMessages[id]) {
+                chatMessages[id] = [];
+            }
             listenToMessages(id);
             renderMessages();
         }
 
-        function closeChatRoom() {
+        window.closeChatRoom = function() {
             document.getElementById('view-chat-room').classList.add('hidden');
             if (unsubMessages) { unsubMessages(); unsubMessages = null; }
             currentChatId = null;
@@ -540,50 +519,80 @@
                 const isMe = m.senderId === userId;
                 const div = document.createElement('div');
                 div.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`;
+                
+                let mediaHtml = '';
+                if (m.mediaUrl) {
+                    if (m.mediaType === 'video') {
+                        mediaHtml = `<video src="${m.mediaUrl}" controls class="w-full max-h-48 rounded-xl object-cover mt-1.5"></video>`;
+                    } else {
+                        mediaHtml = `<img src="${m.mediaUrl}" class="w-full max-h-48 rounded-xl object-cover mt-1.5" alt="media">`;
+                    }
+                }
+
                 div.innerHTML = `
-                    <div class="max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs ${isMe ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-zinc-700/40'}">
+                    <div class="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs ${isMe ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-zinc-700/40'}">
                         ${!isMe ? `<div class="text-[10px] font-semibold text-indigo-400 mb-0.5">${escapeHtml(m.senderName || 'Сосед')}</div>` : ''}
-                        <div class="leading-relaxed break-words">${escapeHtml(m.text)}</div>
+                        ${m.text ? `<p class="leading-relaxed break-words">${escapeHtml(m.text)}</p>` : ''}
+                        ${mediaHtml}
+                        <div class="text-[9px] ${isMe ? 'text-indigo-200' : 'text-zinc-500'} text-right mt-1">${m.time || 'Только что'}</div>
                     </div>
-                    <span class="text-[9px] text-zinc-500 px-1">${m.time || 'Только что'}</span>
                 `;
                 container.appendChild(div);
             });
             container.scrollTop = container.scrollHeight;
         }
 
-        async function sendChatMessage() {
+        window.sendChatMessage = async function() {
             const input = document.getElementById('room-message-input');
             const text = input.value.trim();
-            if (!text || !currentChatId) return;
+            if (!text && !selectedMediaData) return;
 
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const messageData = {
+            const msgData = {
                 senderId: userId,
-                senderName: 'Житель (' + userId.substring(0, 4) + ')',
+                senderName: 'Сосед (' + userId.substring(0, 4) + ')',
                 text: text,
+                mediaUrl: selectedMediaData?.url || null,
+                mediaType: selectedMediaData?.type || null,
                 time: timeStr,
                 createdAt: Date.now()
             };
 
             input.value = '';
+            selectedMediaData = null;
 
-            if (db && auth && auth.currentUser) {
+            if (db && auth && auth.currentUser && currentChatId) {
                 try {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `chat_${currentChatId}_messages`), messageData);
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `chat_${currentChatId}_messages`), msgData);
                     return;
                 } catch (e) {
-                    console.warn("Cloud message send failed");
+                    console.warn("Cloud msg send failed");
                 }
             }
 
             if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
-            chatMessages[currentChatId].push(messageData);
+            chatMessages[currentChatId].push(msgData);
             renderMessages();
         }
 
-        function attachMediaToChat() {
-            showToast("📎 Файл", "Прикрепление файлов в чате доступно.");
+        window.attachMediaToChat = function() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*,video/*';
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (uploadEvent) => {
+                    selectedMediaData = {
+                        url: uploadEvent.target.result,
+                        type: file.type.startsWith('video') ? 'video' : 'image'
+                    };
+                    showToast("📎 Файл прикреплен", "Нажмите отправить, чтобы прикрепить к чату.");
+                };
+                reader.readAsDataURL(file);
+            };
+            fileInput.click();
         }
 
         // FEED FUNCTIONALITY
@@ -601,11 +610,183 @@
 
             feedPosts.forEach(post => {
                 const card = document.createElement('div');
-                card.className = "bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-lg relative";
-                
-                const isOwner = post.createdBy === userId || post.createdBy === 'other';
+                card.className = "bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-lg mb-4";
 
-                let mediaHtml = '';
+                let mediaContent = '';
                 if (post.mediaUrl) {
                     if (post.mediaType === 'video') {
-                        mediaHtml = `<video src="${post.mediaUrl}" controls class="w-
+                        mediaContent = `<video src="${post.mediaUrl}" controls class="w-full max-h-72 object-cover"></video>`;
+                    } else {
+                        mediaContent = `<img src="${post.mediaUrl}" class="w-full max-h-72 object-cover" alt="post media">`;
+                    }
+                }
+
+                card.innerHTML = `
+                    <div class="p-3.5 flex items-center justify-between border-b border-zinc-800/60">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                                ${escapeHtml((post.author || 'И').charAt(0).toUpperCase())}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-xs text-white">${escapeHtml(post.author || 'Сосед')}</h4>
+                                <span class="text-[10px] text-zinc-500">${post.time || 'Только что'}</span>
+                            </div>
+                        </div>
+                        ${post.createdBy === userId ? `<button onclick="deletePost('${post.id}')" class="text-zinc-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
+                    ${mediaContent}
+                    <div class="p-4 space-y-3">
+                        <p class="text-xs text-zinc-200 leading-relaxed">${escapeHtml(post.caption || '')}</p>
+                        <div class="flex items-center space-x-4 pt-1 border-t border-zinc-800/40">
+                            <button onclick="likePost('${post.id}')" class="flex items-center space-x-1.5 text-xs text-zinc-400 hover:text-indigo-400 transition">
+                                <i class="fa-solid fa-heart text-rose-500"></i>
+                                <span>${post.likes || 0}</span>
+                            </button>
+                            <div class="flex items-center space-x-1.5 text-xs text-zinc-400">
+                                <i class="fa-solid fa-comment text-indigo-400"></i>
+                                <span>${post.comments ? post.comments.length : 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        window.openCreateModal = function() {
+            document.getElementById('create-file-input').value = '';
+            document.getElementById('create-caption-input').value = '';
+            document.getElementById('create-preview-box').innerHTML = '<span class="text-xs text-zinc-500">Предпросмотр медиа</span>';
+            selectedMediaData = null;
+            document.getElementById('create-modal').classList.remove('hidden');
+        }
+
+        window.closeCreateModal = function() {
+            document.getElementById('create-modal').classList.add('hidden');
+        }
+
+        window.previewMedia = function(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const isVideo = file.type.startsWith('video');
+                selectedMediaData = { url: e.target.result, type: isVideo ? 'video' : 'image' };
+                const box = document.getElementById('create-preview-box');
+                if (isVideo) {
+                    box.innerHTML = `<video src="${e.target.result}" class="w-full h-full object-cover"></video>`;
+                } else {
+                    box.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover" alt="preview">`;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        window.publishNewPost = async function() {
+            const caption = document.getElementById('create-caption-input').value.trim();
+            if (!caption && !selectedMediaData) {
+                showToast("⚠️ Ошибка", "Добавьте фото/видео или текст поста.");
+                return;
+            }
+
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const postData = {
+                author: 'Житель (' + userId.substring(0, 4) + ')',
+                time: timeStr,
+                caption: caption,
+                mediaUrl: selectedMediaData?.url || null,
+                mediaType: selectedMediaData?.type || null,
+                likes: 0,
+                comments: [],
+                createdBy: userId,
+                createdAt: Date.now()
+            };
+
+            closeCreateModal();
+
+            if (db && auth && auth.currentUser) {
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feed'), postData);
+                    showToast("🚀 Опубликовано", "Пост добавлен в ленту района.");
+                    return;
+                } catch (e) {
+                    console.warn("Cloud feed write failed");
+                }
+            }
+
+            feedPosts.unshift({ id: 'p_' + Date.now(), ...postData });
+            renderFeed();
+            showToast("🚀 Опубликовано", "Пост добавлен в ленту.");
+        }
+
+        window.likePost = function(postId) {
+            const post = feedPosts.find(p => p.id === postId);
+            if (post) {
+                post.likes = (post.likes || 0) + 1;
+                renderFeed();
+            }
+        }
+
+        window.deletePost = async function(postId) {
+            if (!confirm("Удалить этот пост?")) return;
+            if (db && auth && auth.currentUser) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'feed', postId));
+                    showToast("🗑️ Удалено", "Публикация удалена.");
+                    return;
+                } catch (e) {}
+            }
+            feedPosts = feedPosts.filter(p => p.id !== postId);
+            renderFeed();
+        }
+
+        // SOS & INFO MODALS
+        window.openSosModal = function() {
+            document.getElementById('sos-modal').classList.remove('hidden');
+        }
+        window.closeSosModal = function() {
+            document.getElementById('sos-modal').classList.add('hidden');
+        }
+        window.sendSosAlert = function(msg) {
+            closeSosModal();
+            showToast("🚨 SOS Оповещение", "Сигнал отправлен соседям в радиусе 1 км!");
+            const alertPost = {
+                id: 'sos_' + Date.now(),
+                author: '🚨 ЭКСТРЕННЫЙ СИГНАЛ',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                caption: msg + " (Отправлено от жителя ID: " + userId.substring(0, 4) + ")",
+                mediaUrl: null,
+                mediaType: null,
+                likes: 0,
+                comments: [],
+                createdBy: userId,
+                createdAt: Date.now()
+            };
+            feedPosts.unshift(alertPost);
+            switchTab('feed');
+            renderFeed();
+        }
+
+        window.openInfoModal = function() {
+            document.getElementById('info-modal').classList.remove('hidden');
+        }
+        window.closeInfoModal = function() {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
+
+        // Toast utility
+        function showToast(title, text) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').innerHTML = `<strong>${title}:</strong> ${text}`;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
