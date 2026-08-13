@@ -201,6 +201,26 @@
         </div>
     </div>
 
+    <!-- MODAL: DELETE CHAT CONFIRMATION -->
+    <div id="delete-chat-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-xs bg-zinc-900 border border-red-500/40 rounded-3xl p-5 shadow-2xl space-y-4">
+            <div class="flex items-center space-x-3 text-red-400">
+                <div class="w-10 h-10 rounded-2xl bg-red-500/20 flex items-center justify-center text-lg font-bold">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm text-white">Удаление чата</h3>
+                    <span class="text-[10px] text-red-400">Безвозвратное действие</span>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-300 leading-relaxed">Вы действительно хотите удалить этот чат и все его сообщения?</p>
+            <div class="flex space-x-2 pt-1">
+                <button onclick="window.closeDeleteChatModal()" class="flex-1 py-2 bg-zinc-800 text-zinc-300 text-xs font-semibold rounded-xl hover:bg-zinc-700 transition">Отмена</button>
+                <button onclick="window.confirmDeleteChat()" class="flex-1 py-2 bg-red-600 text-white text-xs font-semibold rounded-xl hover:bg-red-500 transition shadow-lg shadow-red-600/30">Удалить</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: CREATE POST -->
     <div id="create-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="w-full max-w-xs bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl space-y-3">
@@ -283,6 +303,7 @@
         let userId = 'resident-' + Math.random().toString(36).substring(2, 8);
         let activeTab = 'chats';
         let currentChatId = null;
+        let chatToDeleteId = null;
 
         let chats = JSON.parse(localStorage.getItem('pulse_chats')) || [
             { id: 'default_1', name: '📢 Главные новости района', lastMessage: 'Добро пожаловать в Pulse!', time: '12:00', avatar: 'https://placehold.co/100x100/10b981/ffffff?text=П', createdBy: 'system' },
@@ -487,10 +508,20 @@
 
             filtered.forEach(chat => {
                 const item = document.createElement('div');
-                item.className = "p-3.5 hover:bg-zinc-900/60 cursor-pointer flex items-center space-x-3 transition border-b border-zinc-900/50 group relative";
+                item.className = "p-3.5 hover:bg-zinc-900/60 flex items-center justify-between transition border-b border-zinc-900/50 group relative";
                 
+                let deleteBtnHtml = '';
+                // Показываем кнопку удаления для чатов, созданных пользователем, или всех в демо-режиме (если не системные)
+                if (chat.createdBy !== 'system') {
+                    deleteBtnHtml = `
+                        <button onclick="window.promptDeleteChat('${chat.id}', event)" class="w-8 h-8 rounded-xl bg-zinc-800/80 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center transition shrink-0 ml-2" title="Удалить чат">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    `;
+                }
+
                 item.innerHTML = `
-                    <div onclick="window.openChatRoom('${chat.id}')" class="flex items-center space-x-3 flex-1 min-w-0">
+                    <div onclick="window.openChatRoom('${chat.id}')" class="flex items-center space-x-3 flex-1 min-w-0 cursor-pointer">
                         <img src="${chat.avatar}" class="w-12 h-12 rounded-2xl object-cover bg-zinc-800 shrink-0" alt="avatar">
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-baseline mb-1">
@@ -500,6 +531,7 @@
                             <p class="text-xs text-zinc-400 truncate">${escapeHtml(chat.lastMessage)}</p>
                         </div>
                     </div>
+                    ${deleteBtnHtml}
                 `;
                 container.appendChild(item);
             });
@@ -516,6 +548,36 @@
 
         window.closeNewChatModal = function() {
             document.getElementById('new-chat-modal').classList.add('hidden');
+        };
+
+        window.promptDeleteChat = function(chatId, event) {
+            event.stopPropagation();
+            chatToDeleteId = chatId;
+            document.getElementById('delete-chat-modal').classList.remove('hidden');
+        };
+
+        window.closeDeleteChatModal = function() {
+            chatToDeleteId = null;
+            document.getElementById('delete-chat-modal').classList.add('hidden');
+        };
+
+        window.confirmDeleteChat = async function() {
+            if (!chatToDeleteId) return;
+            const targetId = chatToDeleteId;
+            window.closeDeleteChatModal();
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('chats').delete().eq('id', targetId);
+                    await supabaseClient.from('messages').delete().eq('chat_id', targetId);
+                } catch (e) {}
+            }
+
+            chats = chats.filter(c => c.id !== targetId);
+            delete chatMessages[targetId];
+            saveToLocalStorage();
+            renderChats();
+            showToast("🗑️ Удалено", "Чат был успешно удален.");
         };
 
         window.submitNewChat = async function() {
