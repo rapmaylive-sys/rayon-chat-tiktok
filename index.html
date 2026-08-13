@@ -284,45 +284,50 @@
         let activeTab = 'chats';
         let currentChatId = null;
 
-        let chats = [
+        let chats = JSON.parse(localStorage.getItem('pulse_chats')) || [
             { id: 'default_1', name: '📢 Главные новости района', lastMessage: 'Добро пожаловать в Pulse!', time: '12:00', avatar: 'https://placehold.co/100x100/10b981/ffffff?text=П', createdBy: 'system' },
-            { id: 'default_2', name: '💬 Общий чат соседей', lastMessage: 'Кто терял кота?', time: '12:05', avatar: 'https://placehold.co/100x100/059669/ffffff?text=О', createdBy: 'system' }
+            { id: 'default_2', name: '💬 Общий чат соседей', lastMessage: 'Обсуждение вопросов района', time: '12:05', avatar: 'https://placehold.co/100x100/059669/ffffff?text=О', createdBy: 'system' }
         ];
-        let chatMessages = {
+        
+        let chatMessages = JSON.parse(localStorage.getItem('pulse_chat_messages')) || {
             'default_1': [
-                { senderId: 'system', senderName: 'Админ', text: 'Добро пожаловать в районный чат Pulse! Здесь вы можете общаться с соседями.', time: '12:00' }
+                { senderId: 'system', senderName: 'Админ', text: 'Добро пожаловать в районный чат Pulse! Напишите первое сообщение.', time: '12:00' }
             ],
             'default_2': [
-                { senderId: 'neighbor1', senderName: 'Сосед (412a)', text: 'Всем привет! Отличная погода сегодня.', time: '12:05' }
+                { senderId: 'system', senderName: 'Система', text: 'Добро пожаловать в общий чат!', time: '12:05' }
             ]
         };
-        let feedPosts = [
-            { id: 'f_1', author: 'Управляющая компания', time: '11:30', caption: 'Завтра с 10:00 до 14:00 будет плановое отключение воды в доме №4.', likes: 5 }
+
+        let feedPosts = JSON.parse(localStorage.getItem('pulse_feed_posts')) || [
+            { id: 'f_1', author: 'Управляющая компания', time: '11:30', caption: 'Добро пожаловать в новую районную сеть Pulse. Публикуйте новости и делитесь важным!', likes: 1 }
         ];
         let selectedMediaData = null;
+
+        function saveToLocalStorage() {
+            localStorage.setItem('pulse_chats', JSON.stringify(chats));
+            localStorage.setItem('pulse_chat_messages', JSON.stringify(chatMessages));
+            localStorage.setItem('pulse_feed_posts', JSON.stringify(feedPosts));
+        }
 
         window.onload = async function() {
             try {
                 if (window.supabase && typeof window.supabase.createClient === 'function') {
-                    // Try initializing Supabase client with dummy or real credentials
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 }
                 document.getElementById('user-id-badge').innerText = 'ID: ' + userId.substring(0, 7);
                 
-                // Try fetching remote data, fallback smoothly if offline or WebSocket blocked
                 await loadChats();
                 await loadFeed();
                 setupRealtimeSubscriptions();
             } catch (e) {
                 console.warn("Supabase fallback mode:", e.message);
-                activateFallbackMode("Автономный режим (WebSocket заблокирован в песочнице)");
+                activateFallbackMode("Автономный режим (Локальное сохранение данных)");
             }
         };
 
         function activateFallbackMode(reason) {
             document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-blue-500";
             document.getElementById('cloud-status-text').innerText = "Локальная память";
-            showToast("ℹ️ Режим", reason);
             renderChats();
             renderFeed();
         }
@@ -353,7 +358,7 @@
                 document.getElementById('cloud-status-text').innerText = "Supabase Active";
                 renderChats();
             } catch (err) {
-                activateFallbackMode("Используем локальный кэш чатов");
+                activateFallbackMode("Используем локальное хранилище");
             }
         }
 
@@ -398,7 +403,6 @@
                         const newMsg = payload.new;
                         if (newMsg && currentChatId === newMsg.chat_id) {
                             if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
-                            // Avoid duplicating our own sent messages
                             if (!chatMessages[currentChatId].some(m => m.text === newMsg.text && m.senderId === newMsg.sender_id)) {
                                 chatMessages[currentChatId].push({
                                     senderId: newMsg.sender_id,
@@ -408,14 +412,14 @@
                                     mediaType: newMsg.media_type,
                                     time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                                 });
+                                saveToLocalStorage();
                                 renderMessages();
                             }
                         }
                     })
-                    .subscribe((status) => {
-                        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                            console.warn("Realtime WebSocket connection restricted in canvas environment.");
-                            activateFallbackMode("Автономный режим (WebSocket ограничен)");
+                    .subscribe((status, err) => {
+                        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || (err && err.message && err.message.includes('WebSocket'))) {
+                            activateFallbackMode("Автономный режим");
                         }
                     });
             } catch(e) {
@@ -423,7 +427,6 @@
             }
         }
 
-        // Exported global functions attached to window
         window.switchTab = function(tab) {
             activeTab = tab;
             const viewChats = document.getElementById('view-chats');
@@ -548,6 +551,10 @@
                 avatar: 'https://placehold.co/100x100/10b981/ffffff?text=' + encodeURIComponent(name.charAt(0).toUpperCase()),
                 createdBy: userId
             });
+            chatMessages[localId] = [
+                { senderId: 'system', senderName: 'Система', text: `Чат "${name}" успешно создан. Напишите первое сообщение!`, time: 'Только что' }
+            ];
+            saveToLocalStorage();
             renderChats();
             window.openChatRoom(localId);
         };
@@ -582,7 +589,10 @@
                 } catch (e) {}
             }
 
-            if (!chatMessages[id]) chatMessages[id] = [];
+            if (!chatMessages[id]) {
+                chatMessages[id] = [];
+            }
+            saveToLocalStorage();
             renderMessages();
         };
 
@@ -648,7 +658,6 @@
             const tempMedia = selectedMediaData;
             selectedMediaData = null;
 
-            // Optimistic UI update so messages appear instantly
             if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
             chatMessages[currentChatId].push({
                 senderId: userId,
@@ -658,19 +667,23 @@
                 mediaType: tempMedia?.type || null,
                 time: timeStr
             });
+
+            // Update chat last message preview
+            const targetChat = chats.find(c => c.id === currentChatId);
+            if (targetChat) {
+                targetChat.lastMessage = text || '[Медиафайл]';
+                targetChat.time = timeStr;
+            }
+
+            saveToLocalStorage();
             renderMessages();
+            renderChats();
 
             if (supabaseClient) {
                 try {
-                    const { error } = await supabaseClient.from('messages').insert([msgData]);
-                    if (error) {
-                        console.warn("Supabase insert message error:", error.message);
-                        showToast("⚠️ Синхронизация", "Сообщение сохранено локально.");
-                    }
+                    await supabaseClient.from('messages').insert([msgData]);
                     return;
-                } catch (e) {
-                    console.warn("Supabase send error:", e);
-                }
+                } catch (e) {}
             }
         };
 
@@ -802,6 +815,7 @@
             }
 
             feedPosts.unshift({ id: 'p_' + Date.now(), ...postData, time: 'Только что' });
+            saveToLocalStorage();
             renderFeed();
         };
 
@@ -809,6 +823,7 @@
             const post = feedPosts.find(p => p.id === postId);
             if (post) {
                 post.likes = (post.likes || 0) + 1;
+                saveToLocalStorage();
                 renderFeed();
                 if (supabaseClient) {
                     try {
@@ -834,6 +849,7 @@
                 caption: msg,
                 likes: 0
             });
+            saveToLocalStorage();
             window.switchTab('feed');
             renderFeed();
         };
