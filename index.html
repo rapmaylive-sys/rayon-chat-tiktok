@@ -530,13 +530,13 @@
 
             if (supabaseClient) {
                 try {
-                    const { data } = await supabaseClient
+                    const { data, error } = await supabaseClient
                         .from('messages')
                         .select('*')
                         .eq('chat_id', id)
                         .order('created_at', { ascending: true });
                     
-                    if (data) {
+                    if (!error && data) {
                         chatMessages[id] = data.map(m => ({
                             senderId: m.sender_id,
                             senderName: m.sender_name,
@@ -612,23 +612,33 @@
             };
 
             input.value = '';
+            const tempMedia = selectedMediaData;
             selectedMediaData = null;
 
-            if (supabaseClient) {
-                try {
-                    await supabaseClient.from('messages').insert([msgData]);
-                    return;
-                } catch (e) {}
-            }
-
+            // Optimistic UI update so messages appear instantly
             if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
             chatMessages[currentChatId].push({
                 senderId: userId,
                 senderName: 'Сосед',
                 text: text,
+                mediaUrl: tempMedia?.url || null,
+                mediaType: tempMedia?.type || null,
                 time: timeStr
             });
             renderMessages();
+
+            if (supabaseClient) {
+                try {
+                    const { error } = await supabaseClient.from('messages').insert([msgData]);
+                    if (error) {
+                        console.warn("Supabase insert message error:", error.message);
+                        showToast("⚠️ Синхронизация", "Сообщение сохранено локально.");
+                    }
+                    return;
+                } catch (e) {
+                    console.warn("Supabase send error:", e);
+                }
+            }
         };
 
         window.attachMediaToChat = function() {
