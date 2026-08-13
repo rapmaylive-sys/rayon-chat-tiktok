@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pulse — Районный Живой Чат и Лента</title>
+    <title>Pulse — Районный Живой Чат и Лента (Supabase)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -23,10 +25,10 @@
     <div class="w-full h-full max-w-md bg-zinc-900 shadow-2xl flex flex-col relative overflow-hidden border border-zinc-800 sm:rounded-3xl">
 
         <!-- TOP APP HEADER -->
-        <header class="h-16 px-4 bg-zinc-900/80 backdrop-blur-md border-b border-zinc-800 flex items-center justify-between z-20 shrink-0">
+        <header class="h-16 px-4 bg-zinc-900/85 backdrop-blur-md border-b border-zinc-800 flex items-center justify-between z-20 shrink-0">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-indigo-500/30">
-                    <i class="fa-solid fa-wave-square"></i>
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-500/30">
+                    <i class="fa-solid fa-bolt"></i>
                 </div>
                 <div>
                     <h1 class="font-bold text-sm text-white tracking-wide">Pulse Район</h1>
@@ -36,19 +38,18 @@
                             <span id="user-id-badge" class="text-[11px] text-zinc-400 font-medium truncate max-w-[90px]">Подключение...</span>
                         </div>
                         <span class="text-zinc-600">|</span>
-                        <div class="flex items-center space-x-1 text-[11px] text-emerald-400 font-medium" title="Онлайн в районе">
-                            <i class="fa-solid fa-users text-[10px]"></i>
-                            <span id="online-count-badge">1 онлайн</span>
+                        <div class="flex items-center space-x-1 text-[11px] text-emerald-400 font-medium">
+                            <span id="cloud-status-text">Supabase</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="openSosModal()" class="px-3 py-1.5 bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-semibold rounded-xl hover:bg-red-500/25 transition flex items-center space-x-1.5 shadow-sm">
+                <button onclick="window.openSosModal()" class="px-3 py-1.5 bg-red-500/15 border border-red-500/30 text-red-400 text-xs font-semibold rounded-xl hover:bg-red-500/25 transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                     <span>SOS</span>
                 </button>
-                <button onclick="openInfoModal()" class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-zinc-700 transition">
+                <button onclick="window.openInfoModal()" class="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/50 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-zinc-700 transition">
                     <i class="fa-solid fa-info text-sm"></i>
                 </button>
             </div>
@@ -57,54 +58,50 @@
         <!-- MAIN CONTENT AREA -->
         <main id="main-content" class="flex-1 overflow-y-auto relative flex flex-col bg-zinc-950">
 
-            <!-- VIEW 1: CHATS (Default) -->
+            <!-- VIEW 1: CHATS -->
             <div id="view-chats" class="flex-1 flex flex-col h-full overflow-hidden">
-                <!-- Search bar -->
                 <div class="p-3 border-b border-zinc-800 bg-zinc-900/50">
                     <div class="relative">
                         <i class="fa-solid fa-search absolute left-3.5 top-3 text-zinc-500 text-xs"></i>
-                        <input type="text" id="chat-search" oninput="filterChats(this.value)" placeholder="Поиск по чатам и обсуждениям..." class="w-full bg-zinc-800 text-white pl-9 pr-4 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-zinc-700/40">
+                        <input type="text" id="chat-search" oninput="window.filterChats(this.value)" placeholder="Поиск по чатам и обсуждениям..." class="w-full bg-zinc-800 text-white pl-9 pr-4 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 border border-zinc-700/40">
                     </div>
                 </div>
 
-                <!-- Chat List container -->
                 <div id="chats-list-container" class="flex-1 overflow-y-auto divide-y divide-zinc-900">
                     <!-- Dynamic chats injected here -->
                 </div>
 
-                <!-- Empty State for Chats -->
                 <div id="chats-empty-state" class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center">
                     <div class="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 mb-3 text-xl">
                         <i class="fa-solid fa-comments"></i>
                     </div>
                     <h3 class="text-sm font-semibold text-zinc-300">Нет активных чатов</h3>
-                    <p class="text-xs text-zinc-500 mt-1 max-w-[220px]">Создайте первое обсуждение или группу, чтобы начать общение с соседями в реальном времени.</p>
-                    <button onclick="openNewChatPrompt()" class="mt-4 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30">Создать чат</button>
+                    <p class="text-xs text-zinc-500 mt-1 max-w-[220px]">Создайте первое обсуждение в Supabase, чтобы начать общение с соседями.</p>
+                    <button onclick="window.openNewChatPrompt()" class="mt-4 px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-xl hover:bg-emerald-500 transition shadow-lg shadow-emerald-600/30">Создать чат</button>
                 </div>
             </div>
 
-            <!-- VIEW 2: FEED (News & Media) -->
+            <!-- VIEW 2: FEED -->
             <div id="view-feed" class="hidden flex-1 flex flex-col h-full overflow-hidden">
                 <div id="feed-list-container" class="flex-1 overflow-y-auto p-4 space-y-4">
                     <!-- Dynamic posts injected here -->
                 </div>
 
-                <!-- Empty State for Feed -->
                 <div id="feed-empty-state" class="hidden flex-1 flex flex-col items-center justify-center p-6 text-center">
                     <div class="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-600 mb-3 text-xl">
                         <i class="fa-solid fa-newspaper"></i>
                     </div>
                     <h3 class="text-sm font-semibold text-zinc-300">Лента новостей пуста</h3>
                     <p class="text-xs text-zinc-500 mt-1 max-w-[220px]">Опубликуйте первую фотографию, видео или важное сообщение для района.</p>
-                    <button onclick="openCreateModal()" class="mt-4 px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30">Создать публикацию</button>
+                    <button onclick="window.openCreateModal()" class="mt-4 px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-xl hover:bg-emerald-500 transition shadow-lg shadow-emerald-600/30">Создать публикацию</button>
                 </div>
             </div>
 
-            <!-- VIEW 4: RULES (New Guidelines Tab) -->
+            <!-- VIEW 3: RULES -->
             <div id="view-rules" class="hidden flex-1 flex flex-col h-full overflow-y-auto p-4 space-y-4">
                 <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-4 shadow-lg">
                     <div class="flex items-center space-x-3 mb-3">
-                        <div class="w-10 h-10 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center text-lg font-bold">
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-lg font-bold">
                             <i class="fa-solid fa-book-open"></i>
                         </div>
                         <div>
@@ -113,7 +110,7 @@
                         </div>
                     </div>
                     <p class="text-xs text-zinc-300 leading-relaxed">
-                        Этот чат создан для оперативного информирования, взаимопомощи и обсуждения районных вопросов. Пожалуйста, соблюдайте следующие правила:
+                        Этот чат работает на базе Supabase для мгновенной доставки сообщений. Пожалуйста, соблюдайте правила:
                     </p>
                 </div>
 
@@ -122,98 +119,168 @@
                         <div class="w-7 h-7 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</div>
                         <div>
                             <h3 class="font-bold text-xs text-white mb-1">Уважение и вежливость</h3>
-                            <p class="text-xs text-zinc-400 leading-relaxed">Никаких оскорблений, токсичности или перехода на личности. Общайтесь так, будто общаетесь лично во дворе.</p>
+                            <p class="text-xs text-zinc-400 leading-relaxed">Никаких оскорблений, токсичности или перехода на личности.</p>
                         </div>
                     </div>
-
                     <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 flex items-start space-x-3">
                         <div class="w-7 h-7 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</div>
                         <div>
-                            <h3 class="font-bold text-xs text-white mb-1">Проверка информации (SOS / БПЛА)</h3>
-                            <p class="text-xs text-zinc-400 leading-relaxed">Публикуя экстренные сообщения или сигналы SOS, будьте максимально точны. Избегайте паники и непроверенных фейков.</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 flex items-start space-x-3">
-                        <div class="w-7 h-7 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</div>
-                        <div>
-                            <h3 class="font-bold text-xs text-white mb-1">Без спама и рекламы</h3>
-                            <p class="text-xs text-zinc-400 leading-relaxed">Коммерческая реклама, спам и посторонние ссылки в общих чатах запрещены. Для объявлений используйте специальный раздел.</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 flex items-start space-x-3">
-                        <div class="w-7 h-7 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">4</div>
-                        <div>
-                            <h3 class="font-bold text-xs text-white mb-1">Помощь и безопасность</h3>
-                            <p class="text-xs text-zinc-400 leading-relaxed">При чрезвычайных ситуациях пользуйтесь кнопкой SOS вверху экрана или обращайтесь в профильные службы экстренной помощи.</p>
+                            <h3 class="font-bold text-xs text-white mb-1">Проверка информации (SOS)</h3>
+                            <p class="text-xs text-zinc-400 leading-relaxed">Публикуя экстренные сообщения, будьте максимально точны.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW 3: ACTIVE CHAT ROOM (Hidden by default) -->
+            <!-- ACTIVE CHAT ROOM OVERLAY -->
             <div id="view-chat-room" class="hidden absolute inset-0 bg-zinc-950 z-30 flex flex-col">
-                <!-- Chat room header -->
                 <div class="h-16 px-4 bg-zinc-900/90 backdrop-blur-md border-b border-zinc-800 flex items-center justify-between shrink-0">
                     <div class="flex items-center space-x-3">
-                        <button onclick="closeChatRoom()" class="w-8 h-8 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white">
+                        <button onclick="window.closeChatRoom()" class="w-8 h-8 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-300 hover:text-white">
                             <i class="fa-solid fa-arrow-left text-xs"></i>
                         </button>
                         <img id="room-header-avatar" src="" class="w-9 h-9 rounded-xl object-cover bg-zinc-800" alt="avatar">
                         <div>
                             <h2 id="room-header-name" class="font-bold text-xs text-white">Имя чата</h2>
-                            <span class="text-[10px] text-emerald-400 font-medium">Общий чат района</span>
+                            <span class="text-[10px] text-emerald-400 font-medium">Supabase Realtime</span>
                         </div>
                     </div>
                     <div class="flex items-center space-x-1">
-                        <button onclick="attachMediaToChat()" class="w-9 h-9 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center text-xs" title="Прикрепить файл">
+                        <button onclick="window.attachMediaToChat()" class="w-9 h-9 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center text-xs" title="Прикрепить файл">
                             <i class="fa-solid fa-paperclip"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- Messages scroll area -->
                 <div id="room-messages-container" class="flex-1 overflow-y-auto p-4 space-y-3">
                     <!-- Messages injected here -->
                 </div>
 
-                <!-- Typing Indicator Bar -->
-                <div id="typing-indicator" class="px-4 py-1.5 text-[11px] text-zinc-400 italic hidden bg-zinc-900/40 border-t border-zinc-800/40">
-                    <span id="typing-text">Кто-то печатает...</span>
-                </div>
-
-                <!-- Chat input footer -->
                 <div class="p-3 bg-zinc-900 border-t border-zinc-800 flex items-center space-x-2 shrink-0">
-                    <input type="text" id="room-message-input" oninput="handleTypingInput()" onkeydown="if(event.key==='Enter') sendChatMessage()" placeholder="Написать сообщение..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-2xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 border border-zinc-700/50">
-                    <button onclick="sendChatMessage()" class="w-10 h-10 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-600/30 transition shrink-0">
+                    <input type="text" id="room-message-input" onkeydown="if(event.key==='Enter') window.sendChatMessage()" placeholder="Написать сообщение..." class="flex-1 bg-zinc-800 text-white px-4 py-2.5 rounded-2xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 border border-zinc-700/50">
+                    <button onclick="window.sendChatMessage()" class="w-10 h-10 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 transition shrink-0">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
                 </div>
             </div>
 
         </main>
-<!-- ... --><!-- Firebase & App Logic Script -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        // Импорт Firebase Realtime Database модулей
-        import { getDatabase, ref, set, onValue, push, remove, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // Real Firebase Configuration
-        const firebaseConfig = {
-          apiKey: "AIzaSyAXMH1DVfRiW2Wj_Ii9autxHga97XIJKhc",
-          authDomain: "district-chat-rostov.firebaseapp.com",
-          projectId: "district-chat-rostov",
-          databaseURL: "https://district-chat-rostov-default-rtdb.firebaseio.com",
-          storageBucket: "district-chat-rostov.firebasestorage.app",
-          messagingSenderId: "693036997617",
-          appId: "1:693036997617:web:c656d47946b58585464250"
-        };
+        <!-- FLOATING ACTION BUTTON (FAB) -->
+        <button id="fab-button" onclick="window.handleFabClick()" class="absolute bottom-20 right-5 w-12 h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl shadow-xl shadow-emerald-600/40 flex items-center justify-center z-20 transition active:scale-95">
+            <i id="fab-icon" class="fa-solid fa-plus text-sm"></i>
+        </button>
 
-        const appId = 'district-chat-rostov';
-        let app, db, rtdb, auth, userId = 'guest-' + Math.floor(Math.random()*1000);
+        <!-- BOTTOM NAVIGATION BAR -->
+        <nav class="h-16 bg-zinc-900/90 backdrop-blur-md border-t border-zinc-800 flex items-center justify-around z-20 shrink-0 px-2">
+            <button onclick="window.switchTab('chats')" id="nav-chats" class="flex-1 flex flex-col items-center justify-center py-1 text-emerald-400 transition">
+                <i class="fa-solid fa-comments text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Чаты</span>
+            </button>
+            <button onclick="window.switchTab('feed')" id="nav-feed" class="flex-1 flex flex-col items-center justify-center py-1 text-zinc-500 hover:text-zinc-300 transition">
+                <i class="fa-solid fa-newspaper text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Лента</span>
+            </button>
+            <button onclick="window.switchTab('rules')" id="nav-rules" class="flex-1 flex flex-col items-center justify-center py-1 text-zinc-500 hover:text-zinc-300 transition">
+                <i class="fa-solid fa-book text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Правила</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- MODAL: NEW CHAT -->
+    <div id="new-chat-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-xs bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl space-y-4">
+            <h3 class="font-bold text-sm text-white">Создать новое обсуждение</h3>
+            <input type="text" id="new-chat-name-input" placeholder="Название чата (например, Улица Пушкинская)" class="w-full bg-zinc-800 text-white px-3.5 py-2.5 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 border border-zinc-700/50">
+            <div class="flex space-x-2 pt-1">
+                <button onclick="window.closeNewChatModal()" class="flex-1 py-2 bg-zinc-800 text-zinc-300 text-xs font-semibold rounded-xl hover:bg-zinc-700 transition">Отмена</button>
+                <button onclick="window.submitNewChat()" class="flex-1 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-xl hover:bg-emerald-500 transition shadow-lg shadow-emerald-600/30">Создать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATE POST -->
+    <div id="create-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-xs bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl space-y-3">
+            <h3 class="font-bold text-sm text-white">Новая публикация в ленту</h3>
+            <textarea id="create-caption-input" rows="3" placeholder="Что происходит в районе? Опишите новость..." class="w-full bg-zinc-800 text-white p-3 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 border border-zinc-700/50 resize-none"></textarea>
+            
+            <div id="create-preview-box" class="w-full h-32 bg-zinc-800/60 border border-dashed border-zinc-700 rounded-2xl flex items-center justify-center overflow-hidden relative">
+                <span class="text-xs text-zinc-500">Предпросмотр медиа</span>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <label class="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-xl text-center cursor-pointer transition">
+                    <i class="fa-solid fa-paperclip mr-1"></i> Файл
+                    <input type="file" id="create-file-input" accept="image/*,video/*" onchange="window.previewMedia(this)" class="hidden">
+                </label>
+                <button onclick="window.publishNewPost()" class="flex-1 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-xl hover:bg-emerald-500 transition shadow-lg shadow-emerald-600/30">Опубликовать</button>
+            </div>
+            <button onclick="window.closeCreateModal()" class="w-full py-1 text-[11px] text-zinc-500 hover:text-zinc-300">Отмена</button>
+        </div>
+    </div>
+
+    <!-- MODAL: SOS -->
+    <div id="sos-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-xs bg-zinc-900 border border-red-500/40 rounded-3xl p-5 shadow-2xl space-y-4">
+            <div class="flex items-center space-x-3 text-red-400">
+                <div class="w-10 h-10 rounded-2xl bg-red-500/20 flex items-center justify-center text-lg font-bold">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm text-white">Экстренный SOS</h3>
+                    <span class="text-[10px] text-red-400">Оповещение соседей</span>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-300 leading-relaxed">Выберите характер происшествия для мгновенного экстренного оповещения в ленту:</p>
+            <div class="space-y-2">
+                <button onclick="window.sendSosAlert('🚨 Срочная помощь / Подозрительная активность')" class="w-full py-2.5 px-3 bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 text-xs font-semibold rounded-xl text-left transition flex items-center justify-between">
+                    <span>Подозрительная активность</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+                <button onclick="window.sendSosAlert('🚨 Требуется медицинская или бытовая помощь')" class="w-full py-2.5 px-3 bg-red-500/15 hover:bg-red-500/25 border border-red-500/30 text-red-300 text-xs font-semibold rounded-xl text-left transition flex items-center justify-between">
+                    <span>Бытовая авария / Помощь</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+            </div>
+            <button onclick="window.closeSosModal()" class="w-full py-2 bg-zinc-800 text-zinc-300 text-xs font-semibold rounded-xl hover:bg-zinc-700 transition">Отмена</button>
+        </div>
+    </div>
+
+    <!-- MODAL: INFO -->
+    <div id="info-modal" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-xs bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl space-y-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-lg font-bold">
+                    <i class="fa-solid fa-info"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm text-white">О приложении Pulse</h3>
+                    <span class="text-[10px] text-zinc-400">Supabase Edition</span>
+                </div>
+            </div>
+            <p class="text-xs text-zinc-300 leading-relaxed">
+                Живая районная сеть для общения соседей, шеринга новостей и экстренных сигналов, работающая на современной облачной базе Supabase.
+            </p>
+            <button onclick="window.closeInfoModal()" class="w-full py-2 bg-emerald-600 text-white text-xs font-semibold rounded-xl hover:bg-emerald-500 transition">Понятно</button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="absolute top-20 left-1/2 -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white text-xs px-4 py-2.5 rounded-2xl shadow-2xl opacity-0 pointer-events-none transition duration-300 z-50 flex items-center space-x-2">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-text">Уведомление</span>
+    </div>
+
+    <!-- SUPABASE APP SCRIPT -->
+    <script>
+        const SUPABASE_URL = "https://example.supabase.co";
+        const SUPABASE_ANON_KEY = "ey_example_anon_key";
+
+        let supabaseClient = null;
+        let userId = 'resident-' + Math.random().toString(36).substring(2, 8);
         let activeTab = 'chats';
         let currentChatId = null;
 
@@ -222,221 +289,108 @@
         let feedPosts = [];
         let selectedMediaData = null;
 
-        let unsubChats = null;
-        let unsubFeed = null;
-        let unsubMessages = null;
-        let rtdbTypingUnsub = null;
-        let typingTimeout = null;
-
         window.onload = async function() {
             try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                rtdb = getDatabase(app); // Инициализация Realtime Database
-                auth = getAuth(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
+                if (window.supabase && typeof window.supabase.createClient === 'function') {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 }
-                
-                userId = auth.currentUser?.uid || crypto.randomUUID();
-                document.getElementById('user-id-badge').innerText = 'ID: ' + userId.substring(0, 6);
+                document.getElementById('user-id-badge').innerText = 'ID: ' + userId.substring(0, 7);
                 document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-                document.getElementById('cloud-status-text').innerText = "Cloud Firestore + Realtime DB активны!";
-                showToast("⚡ Realtime", "Успешное подключение к Realtime Database и Firestore.");
+                document.getElementById('cloud-status-text').innerText = "Supabase Active";
+                
+                showToast("⚡ Supabase", "Система инициализирована.");
 
-                // Настройка статуса присутствия (Presence) в RTDB
-                setupRealtimePresence(userId);
-
+                await loadChats();
+                await loadFeed();
+                setupRealtimeSubscriptions();
             } catch (e) {
-                console.warn("Firebase local/fallback mode:", e.message);
-                userId = 'local-' + Math.floor(Math.random()*10000);
-                document.getElementById('user-id-badge').innerText = 'Локальный режим';
+                console.warn("Supabase initialization notice:", e.message);
+                document.getElementById('cloud-status-text').innerText = "Автономный режим";
                 document.getElementById('connection-dot').className = "w-2 h-2 rounded-full bg-blue-500";
-                document.getElementById('cloud-status-text').innerText = "Работа в автономном режиме";
+                renderChats();
+                renderFeed();
             }
-
-            initRealtimeListeners();
-            renderChats();
-            renderFeed();
         };
 
-        // Настройка онлайн статуса через RTDB (.info/connected и presence)
-        function setupRealtimePresence(uid) {
+        async function loadChats() {
+            if (!supabaseClient) return;
             try {
-                const connectedRef = ref(rtdb, '.info/connected');
-                const userPresenceRef = ref(rtdb, `artifacts/${appId}/presence/${uid}`);
-                const onlineUsersRef = ref(rtdb, `artifacts/${appId}/presence`);
-
-                onValue(connectedRef, (snap) => {
-                    if (snap.val() === true) {
-                        // При отключении автоматически удаляем пользователя
-                        onDisconnect(userPresenceRef).remove();
-                        // Записываем текущее время / статус
-                        set(userPresenceRef, { online: true, lastSeen: serverTimestamp() });
-                    }
-                });
-
-                // Слушаем сколько всего пользователей онлайн
-                onValue(onlineUsersRef, (snapshot) => {
-                    const data = snapshot.val();
-                    const count = data ? Object.keys(data).length : 1;
-                    document.getElementById('online-count-badge').innerText = `${count} онлайн`;
-                });
+                const { data, error } = await supabaseClient
+                    .from('chats')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                if (data) {
+                    chats = data.map(c => ({
+                        id: c.id,
+                        name: c.name,
+                        lastMessage: c.last_message || 'Чат создан',
+                        time: new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        avatar: c.avatar || ('https://placehold.co/100x100/10b981/ffffff?text=' + encodeURIComponent(c.name.charAt(0).toUpperCase())),
+                        createdBy: c.created_by
+                    }));
+                    renderChats();
+                }
             } catch (err) {
-                console.warn("RTDB presence setup warning:", err);
+                renderChats();
             }
         }
 
-        // Индикатор набора текста в RTDB для активного чата
-        function listenToTyping(chatId) {
-            if (rtdbTypingUnsub) {
-                rtdbTypingUnsub();
-                rtdbTypingUnsub = null;
-            }
-            if (!rtdb) return;
-
+        async function loadFeed() {
+            if (!supabaseClient) return;
             try {
-                const typingRef = ref(rtdb, `artifacts/${appId}/typing/${chatId}`);
-                onValue(typingRef, (snapshot) => {
-                    const typingData = snapshot.val() || {};
-                    const indicator = document.getElementById('typing-indicator');
-                    const typingText = document.getElementById('typing-text');
-                    
-                    // Фильтруем других пользователей, которые печатают (исключая себя)
-                    const othersTyping = Object.keys(typingData).filter(id => id !== userId && typingData[id]);
-                    
-                    if (othersTyping.length > 0) {
-                        typingText.innerText = othersTyping.length === 1 ? 'Сосед печатает сообщение...' : 'Несколько соседей печатают...';
-                        indicator.classList.remove('hidden');
-                    } else {
-                        indicator.classList.add('hidden');
-                    }
-                });
-            } catch (e) {}
-        }
-
-        window.handleTypingInput = function() {
-            if (!rtdb || !currentChatId) return;
-            const myTypingRef = ref(rtdb, `artifacts/${appId}/typing/${currentChatId}/${userId}`);
-            
-            set(myTypingRef, true);
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                set(myTypingRef, null);
-            }, 2500);
-        }
-
-        // Firestore Realtime Listeners
-        function initRealtimeListeners() {
-            if (!db || !auth) return;
-
-            try {
-                const chatsCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats');
-                unsubChats = onSnapshot(chatsCol, (snapshot) => {
-                    chats = [];
-                    snapshot.forEach(docSnap => {
-                        chats.push({ id: docSnap.id, ...docSnap.data() });
-                    });
-                    chats.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-                    renderChats(document.getElementById('chat-search')?.value || '');
-                }, (error) => console.warn("Chats sync offline fallback"));
-
-                const feedCol = collection(db, 'artifacts', appId, 'public', 'data', 'feed');
-                unsubFeed = onSnapshot(feedCol, (snapshot) => {
-                    feedPosts = [];
-                    snapshot.forEach(docSnap => {
-                        feedPosts.push({ id: docSnap.id, ...docSnap.data() });
-                    });
-                    feedPosts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                const { data, error } = await supabaseClient
+                    .from('feed_posts')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                if (data) {
+                    feedPosts = data.map(p => ({
+                        id: p.id,
+                        author: p.author,
+                        time: new Date(p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        caption: p.caption,
+                        mediaUrl: p.media_url,
+                        mediaType: p.media_type,
+                        likes: p.likes || 0,
+                        createdBy: p.created_by
+                    }));
                     renderFeed();
-                }, (error) => console.warn("Feed sync offline fallback"));
+                }
             } catch (err) {
-                console.log("Using local state arrays.");
+                renderFeed();
             }
         }
 
-        function listenToMessages(chatId) {
-            if (unsubMessages) unsubMessages();
-            if (!db || !auth) return;
-
-            listenToTyping(chatId);
-
+        function setupRealtimeSubscriptions() {
+            if (!supabaseClient) return;
             try {
-                const msgCol = collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}_messages`);
-                unsubMessages = onSnapshot(msgCol, (snapshot) => {
-                    const msgs = [];
-                    snapshot.forEach(docSnap => {
-                        msgs.push({ id: docSnap.id, ...docSnap.data() });
-                    });
-                    msgs.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-                    chatMessages[chatId] = msgs;
-                    if (currentChatId === chatId) {
-                        renderMessages();
-                    }
-                }, (error) => console.log("Local message sync"));
-            } catch (e) {}
+                supabaseClient
+                    .channel('public-db-changes')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => loadChats())
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'feed_posts' }, () => loadFeed())
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                        const newMsg = payload.new;
+                        if (newMsg && currentChatId === newMsg.chat_id) {
+                            if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
+                            chatMessages[currentChatId].push({
+                                senderId: newMsg.sender_id,
+                                senderName: newMsg.sender_name,
+                                text: newMsg.text,
+                                mediaUrl: newMsg.media_url,
+                                mediaType: newMsg.media_type,
+                                time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            });
+                            renderMessages();
+                        }
+                    })
+                    .subscribe();
+            } catch(e) {}
         }
 
-            initRealtimeListeners();
-            renderChats();
-            renderFeed();
-        };
-
-        // Firestore Realtime Listeners
-        function initRealtimeListeners() {
-            if (!db || !auth) return;
-
-            try {
-                const chatsCol = collection(db, 'artifacts', appId, 'public', 'data', 'chats');
-                unsubChats = onSnapshot(chatsCol, (snapshot) => {
-                    chats = [];
-                    snapshot.forEach(docSnap => {
-                        chats.push({ id: docSnap.id, ...docSnap.data() });
-                    });
-                    chats.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-                    renderChats(document.getElementById('chat-search')?.value || '');
-                }, (error) => console.warn("Chats sync offline fallback"));
-
-                const feedCol = collection(db, 'artifacts', appId, 'public', 'data', 'feed');
-                unsubFeed = onSnapshot(feedCol, (snapshot) => {
-                    feedPosts = [];
-                    snapshot.forEach(docSnap => {
-                        feedPosts.push({ id: docSnap.id, ...docSnap.data() });
-                    });
-                    feedPosts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-                    renderFeed();
-                }, (error) => console.warn("Feed sync offline fallback"));
-            } catch (err) {
-                console.log("Using local state arrays.");
-            }
-        }
-
-        function listenToMessages(chatId) {
-            if (unsubMessages) unsubMessages();
-            if (!db || !auth) return;
-
-            try {
-                const msgCol = collection(db, 'artifacts', appId, 'public', 'data', `chat_${chatId}_messages`);
-                unsubMessages = onSnapshot(msgCol, (snapshot) => {
-                    const msgs = [];
-                    snapshot.forEach(docSnap => {
-                        msgs.push({ id: docSnap.id, ...docSnap.data() });
-                    });
-                    msgs.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-                    chatMessages[chatId] = msgs;
-                    if (currentChatId === chatId) {
-                        renderMessages();
-                    }
-                }, (error) => console.log("Local message sync"));
-            } catch (e) {
-                // Fallback handled locally
-            }
-        }
-
-        // Tab Switching
+        // Exported global functions attached to window
         window.switchTab = function(tab) {
             activeTab = tab;
             const viewChats = document.getElementById('view-chats');
@@ -448,7 +402,6 @@
             const fabButton = document.getElementById('fab-button');
             const fabIcon = document.getElementById('fab-icon');
 
-            // Reset visibility
             viewChats.classList.add('hidden');
             viewFeed.classList.add('hidden');
             viewRules.classList.add('hidden');
@@ -459,30 +412,29 @@
 
             if (tab === 'chats') {
                 viewChats.classList.remove('hidden');
-                navChats.className = "flex-1 flex flex-col items-center justify-center py-1 text-indigo-400 transition";
+                navChats.className = "flex-1 flex flex-col items-center justify-center py-1 text-emerald-400 transition";
                 fabButton.classList.remove('hidden');
                 fabIcon.className = "fa-solid fa-plus text-sm";
             } else if (tab === 'feed') {
                 viewFeed.classList.remove('hidden');
-                navFeed.className = "flex-1 flex flex-col items-center justify-center py-1 text-indigo-400 transition";
+                navFeed.className = "flex-1 flex flex-col items-center justify-center py-1 text-emerald-400 transition";
                 fabButton.classList.remove('hidden');
                 fabIcon.className = "fa-solid fa-camera text-sm";
             } else if (tab === 'rules') {
                 viewRules.classList.remove('hidden');
-                navRules.className = "flex-1 flex flex-col items-center justify-center py-1 text-indigo-400 transition";
-                fabButton.classList.add('hidden'); // Скрываем FAB на вкладке правил
+                navRules.className = "flex-1 flex flex-col items-center justify-center py-1 text-emerald-400 transition";
+                fabButton.classList.add('hidden');
             }
-        }
+        };
 
         window.handleFabClick = function() {
             if (activeTab === 'chats') {
-                openNewChatPrompt();
+                window.openNewChatPrompt();
             } else {
-                openCreateModal();
+                window.openCreateModal();
             }
-        }
+        };
 
-        // CHATS FUNCTIONALITY
         function renderChats(filter = '') {
             const container = document.getElementById('chats-list-container');
             const emptyState = document.getElementById('chats-empty-state');
@@ -501,20 +453,17 @@
                 const item = document.createElement('div');
                 item.className = "p-3.5 hover:bg-zinc-900/60 cursor-pointer flex items-center space-x-3 transition border-b border-zinc-900/50 group relative";
                 
-                const isOwner = chat.createdBy === userId || chat.createdBy === 'admin';
-
                 item.innerHTML = `
-                    <div onclick="openChatRoom('${chat.id}')" class="flex items-center space-x-3 flex-1 min-w-0">
+                    <div onclick="window.openChatRoom('${chat.id}')" class="flex items-center space-x-3 flex-1 min-w-0">
                         <img src="${chat.avatar}" class="w-12 h-12 rounded-2xl object-cover bg-zinc-800 shrink-0" alt="avatar">
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-baseline mb-1">
                                 <h3 class="font-bold text-xs text-white truncate">${escapeHtml(chat.name)}</h3>
-                                <span class="text-[10px] text-zinc-500">${chat.time || 'Только что'}</span>
+                                <span class="text-[10px] text-zinc-500">${chat.time}</span>
                             </div>
-                            <p class="text-xs text-zinc-400 truncate">${escapeHtml(chat.lastMessage || 'Чат создан')}</p>
+                            <p class="text-xs text-zinc-400 truncate">${escapeHtml(chat.lastMessage)}</p>
                         </div>
                     </div>
-                    ${isOwner ? `<button onclick="deleteChatItem(event, '${chat.id}')" class="w-8 h-8 rounded-xl bg-zinc-800/80 text-zinc-400 hover:text-red-400 hover:bg-zinc-700 flex items-center justify-center transition text-xs shrink-0" title="Удалить чат"><i class="fa-solid fa-trash"></i></button>` : ''}
                 `;
                 container.appendChild(item);
             });
@@ -522,70 +471,55 @@
 
         window.filterChats = function(query) {
             renderChats(query);
-        }
+        };
 
         window.openNewChatPrompt = function() {
             document.getElementById('new-chat-name-input').value = '';
             document.getElementById('new-chat-modal').classList.remove('hidden');
-        }
+        };
 
         window.closeNewChatModal = function() {
             document.getElementById('new-chat-modal').classList.add('hidden');
-        }
+        };
 
         window.submitNewChat = async function() {
             const input = document.getElementById('new-chat-name-input');
             const name = input.value.trim();
             if (!name) return;
 
-            const chatData = {
-                name: name,
-                lastMessage: "Чат создан",
-                time: "Только что",
-                avatar: "https://placehold.co/100x100/6366f1/ffffff?text=" + encodeURIComponent(name.charAt(0).toUpperCase()),
-                createdBy: userId,
-                createdAt: Date.now()
-            };
+            window.closeNewChatModal();
 
-            closeNewChatModal();
-
-            if (db && auth && auth.currentUser) {
+            if (supabaseClient) {
                 try {
-                    const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'chats'), chatData);
-                    openChatRoom(docRef.id);
-                    showToast("✅ Чат", "Обсуждение успешно создано в облаке.");
-                    return;
-                } catch (e) {
-                    console.warn("Cloud write failed, falling back to local state");
-                }
+                    const { data, error } = await supabaseClient.from('chats').insert([{
+                        name: name,
+                        last_message: 'Чат создан',
+                        created_by: userId,
+                        avatar: 'https://placehold.co/100x100/10b981/ffffff?text=' + encodeURIComponent(name.charAt(0).toUpperCase())
+                    }]).select();
+
+                    if (!error && data && data.length > 0) {
+                        window.openChatRoom(data[0].id);
+                        showToast("✅ Supabase", "Обсуждение успешно создано.");
+                        return;
+                    }
+                } catch (e) {}
             }
-            
+
             const localId = 'chat_' + Date.now();
-            chats.unshift({ id: localId, ...chatData });
+            chats.unshift({
+                id: localId,
+                name: name,
+                lastMessage: 'Чат создан',
+                time: 'Только что',
+                avatar: 'https://placehold.co/100x100/10b981/ffffff?text=' + encodeURIComponent(name.charAt(0).toUpperCase()),
+                createdBy: userId
+            });
             renderChats();
-            openChatRoom(localId);
-            showToast("✅ Чат", "Обсуждение создано локально.");
-        }
+            window.openChatRoom(localId);
+        };
 
-        window.deleteChatItem = async function(event, chatId) {
-            event.stopPropagation();
-            if (!confirm("Удалить этот чат?")) return;
-
-            if (db && auth && auth.currentUser) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'chats', chatId));
-                    showToast("🗑️ Удалено", "Чат был удален из базы данных.");
-                    return;
-                } catch (e) {
-                    console.warn("Cloud delete failed");
-                }
-            }
-            chats = chats.filter(c => c.id !== chatId);
-            renderChats();
-            showToast("🗑️ Удалено", "Чат удален.");
-        }
-
-        window.openChatRoom = function(id) {
+        window.openChatRoom = async function(id) {
             currentChatId = id;
             const chat = chats.find(c => c.id === id);
             if (!chat) return;
@@ -593,24 +527,37 @@
             document.getElementById('room-header-name').innerText = chat.name;
             document.getElementById('room-header-avatar').src = chat.avatar;
             document.getElementById('view-chat-room').classList.remove('hidden');
-            
-            if (!chatMessages[id]) {
-                chatMessages[id] = [];
+
+            if (supabaseClient) {
+                try {
+                    const { data } = await supabaseClient
+                        .from('messages')
+                        .select('*')
+                        .eq('chat_id', id)
+                        .order('created_at', { ascending: true });
+                    
+                    if (data) {
+                        chatMessages[id] = data.map(m => ({
+                            senderId: m.sender_id,
+                            senderName: m.sender_name,
+                            text: m.text,
+                            mediaUrl: m.media_url,
+                            mediaType: m.media_type,
+                            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        }));
+                    }
+                } catch (e) {}
             }
-            listenToMessages(id);
+
+            if (!chatMessages[id]) chatMessages[id] = [];
             renderMessages();
-        }
+        };
 
         window.closeChatRoom = function() {
             document.getElementById('view-chat-room').classList.add('hidden');
-            if (unsubMessages) { unsubMessages(); unsubMessages = null; }
-            if (rtdb && currentChatId) {
-                // Очищаем статус набора текста при закрытии комнаты
-                set(ref(rtdb, `artifacts/${appId}/typing/${currentChatId}/${userId}`), null);
-            }
             currentChatId = null;
             renderChats();
-        }
+        };
 
         function renderMessages() {
             const container = document.getElementById('room-messages-container');
@@ -637,11 +584,11 @@
                 }
 
                 div.innerHTML = `
-                    <div class="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs ${isMe ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-zinc-700/40'}">
-                        ${!isMe ? `<div class="text-[10px] font-semibold text-indigo-400 mb-0.5">${escapeHtml(m.senderName || 'Сосед')}</div>` : ''}
+                    <div class="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs ${isMe ? 'bg-emerald-600 text-white rounded-br-sm' : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-zinc-700/40'}">
+                        ${!isMe ? `<div class="text-[10px] font-semibold text-emerald-400 mb-0.5">${escapeHtml(m.senderName || 'Сосед')}</div>` : ''}
                         ${m.text ? `<p class="leading-relaxed break-words">${escapeHtml(m.text)}</p>` : ''}
                         ${mediaHtml}
-                        <div class="text-[9px] ${isMe ? 'text-indigo-200' : 'text-zinc-500'} text-right mt-1">${m.time || 'Только что'}</div>
+                        <div class="text-[9px] ${isMe ? 'text-emerald-200' : 'text-zinc-500'} text-right mt-1">${m.time || 'Только что'}</div>
                     </div>
                 `;
                 container.appendChild(div);
@@ -654,36 +601,35 @@
             const text = input.value.trim();
             if (!text && !selectedMediaData) return;
 
-            // Сбрасываем статус печати в RTDB
-            if (rtdb && currentChatId) {
-                set(ref(rtdb, `artifacts/${appId}/typing/${currentChatId}/${userId}`), null);
-            }
-
             const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const msgData = {
-                senderId: userId,
-                senderName: 'Сосед (' + userId.substring(0, 4) + ')',
+                chat_id: currentChatId,
+                sender_id: userId,
+                sender_name: 'Сосед (' + userId.substring(0, 4) + ')',
                 text: text,
-                mediaUrl: selectedMediaData?.url || null,
-                mediaType: selectedMediaData?.type || null,
-                time: timeStr,
-                createdAt: Date.now()
+                media_url: selectedMediaData?.url || null,
+                media_type: selectedMediaData?.type || null
             };
 
             input.value = '';
             selectedMediaData = null;
 
-            if (db && auth && auth.currentUser && currentChatId) {
+            if (supabaseClient) {
                 try {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', `chat_${currentChatId}_messages`), msgData);
+                    await supabaseClient.from('messages').insert([msgData]);
                     return;
                 } catch (e) {}
             }
 
             if (!chatMessages[currentChatId]) chatMessages[currentChatId] = [];
-            chatMessages[currentChatId].push(msgData);
+            chatMessages[currentChatId].push({
+                senderId: userId,
+                senderName: 'Сосед',
+                text: text,
+                time: timeStr
+            });
             renderMessages();
-        }
+        };
 
         window.attachMediaToChat = function() {
             const fileInput = document.createElement('input');
@@ -698,14 +644,13 @@
                         url: uploadEvent.target.result,
                         type: file.type.startsWith('video') ? 'video' : 'image'
                     };
-                    showToast("📎 Файл прикреплен", "Нажмите отправить, чтобы прикрепить к чату.");
+                    showToast("📎 Файл прикреплен", "Нажмите отправить.");
                 };
                 reader.readAsDataURL(file);
             };
             fileInput.click();
-        }
+        };
 
-        // FEED FUNCTIONALITY
         function renderFeed() {
             const container = document.getElementById('feed-list-container');
             const emptyState = document.getElementById('feed-empty-state');
@@ -734,7 +679,7 @@
                 card.innerHTML = `
                     <div class="p-3.5 flex items-center justify-between border-b border-zinc-800/60">
                         <div class="flex items-center space-x-2.5">
-                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
                                 ${escapeHtml((post.author || 'И').charAt(0).toUpperCase())}
                             </div>
                             <div>
@@ -742,20 +687,15 @@
                                 <span class="text-[10px] text-zinc-500">${post.time || 'Только что'}</span>
                             </div>
                         </div>
-                        ${post.createdBy === userId ? `<button onclick="deletePost('${post.id}')" class="text-zinc-500 hover:text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
                     ${mediaContent}
                     <div class="p-4 space-y-3">
                         <p class="text-xs text-zinc-200 leading-relaxed">${escapeHtml(post.caption || '')}</p>
                         <div class="flex items-center space-x-4 pt-1 border-t border-zinc-800/40">
-                            <button onclick="likePost('${post.id}')" class="flex items-center space-x-1.5 text-xs text-zinc-400 hover:text-indigo-400 transition">
+                            <button onclick="window.likePost('${post.id}')" class="flex items-center space-x-1.5 text-xs text-zinc-400 hover:text-emerald-400 transition">
                                 <i class="fa-solid fa-heart text-rose-500"></i>
                                 <span>${post.likes || 0}</span>
                             </button>
-                            <div class="flex items-center space-x-1.5 text-xs text-zinc-400">
-                                <i class="fa-solid fa-comment text-indigo-400"></i>
-                                <span>${post.comments ? post.comments.length : 0}</span>
-                            </div>
                         </div>
                     </div>
                 `;
@@ -769,11 +709,11 @@
             document.getElementById('create-preview-box').innerHTML = '<span class="text-xs text-zinc-500">Предпросмотр медиа</span>';
             selectedMediaData = null;
             document.getElementById('create-modal').classList.remove('hidden');
-        }
+        };
 
         window.closeCreateModal = function() {
             document.getElementById('create-modal').classList.add('hidden');
-        }
+        };
 
         window.previewMedia = function(input) {
             const file = input.files[0];
@@ -790,101 +730,78 @@
                 }
             };
             reader.readAsDataURL(file);
-        }
+        };
 
         window.publishNewPost = async function() {
             const caption = document.getElementById('create-caption-input').value.trim();
             if (!caption && !selectedMediaData) {
-                showToast("⚠️ Ошибка", "Добавьте фото/видео или текст поста.");
+                showToast("⚠️ Ошибка", "Добавьте текст или медиа.");
                 return;
             }
 
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const postData = {
                 author: 'Житель (' + userId.substring(0, 4) + ')',
-                time: timeStr,
                 caption: caption,
-                mediaUrl: selectedMediaData?.url || null,
-                mediaType: selectedMediaData?.type || null,
+                media_url: selectedMediaData?.url || null,
+                media_type: selectedMediaData?.type || null,
                 likes: 0,
-                comments: [],
-                createdBy: userId,
-                createdAt: Date.now()
+                created_by: userId
             };
 
-            closeCreateModal();
+            window.closeCreateModal();
 
-            if (db && auth && auth.currentUser) {
+            if (supabaseClient) {
                 try {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feed'), postData);
-                    showToast("🚀 Опубликовано", "Пост добавлен в ленту района.");
+                    await supabaseClient.from('feed_posts').insert([postData]);
+                    showToast("🚀 Опубликовано", "Пост добавлен.");
                     return;
-                } catch (e) {
-                    console.warn("Cloud feed write failed");
-                }
+                } catch (e) {}
             }
 
-            feedPosts.unshift({ id: 'p_' + Date.now(), ...postData });
+            feedPosts.unshift({ id: 'p_' + Date.now(), ...postData, time: 'Только что' });
             renderFeed();
-            showToast("🚀 Опубликовано", "Пост добавлен в ленту.");
-        }
+        };
 
-        window.likePost = function(postId) {
+        window.likePost = async function(postId) {
             const post = feedPosts.find(p => p.id === postId);
             if (post) {
                 post.likes = (post.likes || 0) + 1;
                 renderFeed();
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('feed_posts').update({ likes: post.likes }).eq('id', postId);
+                    } catch (e) {}
+                }
             }
-        }
+        };
 
-        window.deletePost = async function(postId) {
-            if (!confirm("Удалить этот пост?")) return;
-            if (db && auth && auth.currentUser) {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'feed', postId));
-                    showToast("🗑️ Удалено", "Публикация удалена.");
-                    return;
-                } catch (e) {}
-            }
-            feedPosts = feedPosts.filter(p => p.id !== postId);
-            renderFeed();
-        }
-
-        // SOS & INFO MODALS
         window.openSosModal = function() {
             document.getElementById('sos-modal').classList.remove('hidden');
-        }
+        };
         window.closeSosModal = function() {
             document.getElementById('sos-modal').classList.add('hidden');
-        }
+        };
         window.sendSosAlert = function(msg) {
-            closeSosModal();
-            showToast("🚨 SOS Оповещение", "Сигнал отправлен соседям в радиусе 1 км!");
-            const alertPost = {
+            window.closeSosModal();
+            showToast("🚨 SOS Оповещение", "Сигнал отправлен!");
+            feedPosts.unshift({
                 id: 'sos_' + Date.now(),
                 author: '🚨 ЭКСТРЕННЫЙ СИГНАЛ',
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                caption: msg + " (Отправлено от жителя ID: " + userId.substring(0, 4) + ")",
-                mediaUrl: null,
-                mediaType: null,
-                likes: 0,
-                comments: [],
-                createdBy: userId,
-                createdAt: Date.now()
-            };
-            feedPosts.unshift(alertPost);
-            switchTab('feed');
+                caption: msg,
+                likes: 0
+            });
+            window.switchTab('feed');
             renderFeed();
-        }
+        };
 
         window.openInfoModal = function() {
             document.getElementById('info-modal').classList.remove('hidden');
-        }
+        };
         window.closeInfoModal = function() {
             document.getElementById('info-modal').classList.add('hidden');
-        }
+        };
 
-        // Toast utility
         function showToast(title, text) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-text').innerHTML = `<strong>${title}:</strong> ${text}`;
@@ -895,6 +812,7 @@
         }
 
         function escapeHtml(str) {
+            if (!str) return '';
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
     </script>
